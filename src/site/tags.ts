@@ -92,7 +92,6 @@ const tags: Tags = {
                     });
                     // TODO: LOCA!
                     const en = (typeof tag !== 'string') ? tag.en : undefined;
-                    console.log(en);
                     e.innerHTML = en ?? str;
                     tags.container.appendChild(e);
                 });

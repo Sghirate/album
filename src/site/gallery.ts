@@ -37,7 +37,6 @@ const gallery: Gallery = {
     pswpModule: PhotoSwipe
   }),
   update(selectedTags: string[]): void {
-    console.log(selectedTags);
     const newChildren: HTMLAnchorElement[] = [];
     const all = gallery.manifest?.photos ?? {};
     for (const name in all) {
