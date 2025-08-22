@@ -588,6 +588,13 @@ label input {
 #app {
   min-height: 100vh;
 }
+#map {
+  height: calc(round(down, 50vh - calc(var(--line-height) * 2), 1ch));
+
+  *+* {
+    margin: 0;
+  }
+}
 .pswp {
   margin: 0;
 

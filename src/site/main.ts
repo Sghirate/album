@@ -1,5 +1,6 @@
 import gallery from './gallery';
 import manifest from './manifest';
+import map from './map';
 import tags from './tags';
 import { SelectedPhoto } from './types';
 
@@ -10,6 +11,7 @@ if (!app) {
 }
 app?.replaceChildren(
     tags.container,
+    map.container,
     gallery.container,
 )
 
@@ -23,17 +25,20 @@ function updateSelection(tags: string[]) {
         selection.push({ name, photo });
     }
     gallery.update(selection)
+    map.update(selection);
 }
 // Load data
 async function initAsync() {
     await manifest.initAsync();
     const promises = [
         gallery.initAsync(),
+        map.initAsync(),
         tags.initAsync(manifest?.tags ?? []),
     ];
     await Promise.all(promises);
     // Hookup events
     tags.events.on('onSelectionChanged', s => updateSelection(s));
+    map.events.on('onRequestOpen', name => gallery.open(name));
     // initial selection
     updateSelection(tags.selected);
 }
