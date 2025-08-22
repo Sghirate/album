@@ -51,7 +51,6 @@ const map: Map = {
             const marker = map.markers[name];
             marker.addTo(map.map);
         }
-        console.log(selection);
     },
     async initAsync() {
         map.map = new LeafletMap(map.container);
