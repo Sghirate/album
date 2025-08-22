@@ -1,0 +1,47 @@
+import { defineConfig, loadEnv } from 'vite';
+import gallery, { hasImageExtension } from './src/vite/plugin';
+
+export default defineConfig(({ mode }) => {
+    const env = loadEnv(mode, process.cwd(), '')
+    return {
+        define: {
+            BUILD_TIMESTAMP: JSON.stringify(Date.now().toString(16)),
+        },
+        plugins: [
+            gallery({
+                input: {
+                    dir: env.GALLERY_DIR,
+                    tagLoca: './tag_loca.json',
+                },
+                output: {
+                    image: {
+                        maxPixelDimension: 3000,
+                        format: {
+                            type: 'jpg',
+                            options: {
+                                quality: 90,
+                            }
+                        }
+                    },
+                    thumb: {
+                        maxPixelDimension: 256,
+                        format: {
+                            type: 'jpg',
+                            options: {
+                                quality: 50,
+                            },
+                        },
+                    },
+                },
+                filter: {
+                    path: [
+                        hasImageExtension,
+                    ],
+                },
+                cache: {
+                    dir: './node_modules/.cache/gallery',
+                },
+            }),
+        ]
+    }
+})

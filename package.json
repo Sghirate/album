@@ -1,0 +1,33 @@
+{
+  "name": "album",
+  "author": {
+    "name": "Frederick Parotat",
+    "email": "frederick@parot.at",
+    "url": "https://frederick.parot.at"
+  },
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "prod": "http-server ./dist",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@rollup/pluginutils": "^5.2.0",
+    "@sghirate/vite-gallery": "file:../vite-gallery",
+    "@types/node": "^24.3.0",
+    "exifr": "^7.1.3",
+    "http-server": "^14.1.1",
+    "rollup": "^4.47.1",
+    "sharp": "^0.34.3",
+    "typescript": "~5.8.3",
+    "moment": "^2.30.1",
+    "vite": "^7.1.2"
+  },
+  "dependencies": {
+    "leaflet": "^1.9.4",
+    "photoswipe": "^5.4.4"
+  }
+}

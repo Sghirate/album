@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="author" content="Frederick Parotat" />
+  <meta name="description" content="Personal Photo Gallery" />
+  <link rel="stylesheet" href="./src/site/reset.css">
+  <link rel="stylesheet" href="./src/site/index.css">
+  <script>
+    function fontLoaded(e) {
+      e.onload = null;
+      e.rel = 'stylesheet';
+      e.removeAttribute('as');
+      document.querySelector(':root').style.setProperty('--font-family', '"JetBrains Mono", monospace')
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.cdnfonts.com/" crossorigin="">
+  <link rel="preload" href="https://fonts.cdnfonts.com/css/jetbrains-mono-2" onload="fontLoaded(this)" as="style">
+  <title>The AlpBum</title>
+</head>
+
+<body>
+  <table class="header">
+    <tr>
+      <td colspan="2" rowspan="2" class="width-auto">
+        <h1 class="title">The AlpBum</h1>
+        <span class="subtitle">...</span>
+      </td>
+    </tr>
+  </table>
+  <div id="app">
+    <noscript>
+      <h1>This gallery will not function when JavaScript is disabled.</h1>
+    </noscript>
+  </div>
+  <script type="module" src="/src/site/main.ts"></script>
+
+  <table class="footer">
+    <tr>
+      <td>Design based on <a href="https://owickstrom.github.io/the-monospace-web/">The Monospace Web</a> by <a href="https://wickstrom.tech/">Oskar Wickström</a></td>
+    </tr>
+  </table>
+</body>
+
+</html>
