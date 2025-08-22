@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { createReadStream } from "fs";
-import { mkdir, readdir, readFile, rmdir, stat, unlink, writeFile } from "fs/promises";
+import { mkdir, readdir, readFile, rm, rmdir, stat, unlink, writeFile } from "fs/promises";
 import { join, resolve } from "path";
 import { Logger } from "vite";
 import { CacheOptions, OutputOptions } from "./options";
@@ -48,7 +48,7 @@ export function createCache(logger: Logger, options: CacheOptions): Cache {
         for (const de of await readdir(dir, { withFileTypes: true })) {
             if (de.isDirectory()) {
                 if (de.name !== optionsHash) {
-                    await rmdir(join(dir, de.name));
+                    await rm(join(dir, de.name), { recursive: true, force: true });
                 } else {
                     await populateFilesAsync(join(dir, de.name));
                     success = true;
