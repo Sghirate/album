@@ -18,14 +18,14 @@ export type Tags = {
     initAsync(manifest: Manifest | undefined): Promise<void>;
 }
 const selected: string[] = ['top-rated'];
-function load(): boolean {
+function load(available: string[]): boolean {
     const str = localStorage.getItem('tags');
     const json = str && JSON.parse(str);
     if (!Array.isArray(json)) {
         return false;
     }
     selected.length = 0;
-    selected.push(...json);
+    selected.push(...json.filter(t => available.includes(t)));
     return true;
 }
 function save() {
@@ -101,9 +101,10 @@ const tags: Tags = {
             ele.value = selected.includes(str) ? "selected" : "";
         }
     },
-    async initAsync(manifest: undefined) {
+    async initAsync(manifest: Manifest | undefined) {
         tags.manifest = manifest;
-        load();
+        const available = (manifest?.tags ?? []).map(t => typeof t !== 'string' ? t.tag : t);
+        load(available);
         tags.events.emit('onSelectionChanged', selected);
         tags.update();
     },
