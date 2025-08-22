@@ -1,4 +1,4 @@
-import { Manifest } from "../shared/types";
+import { TagInfo } from "../shared/types";
 import { make } from "./dom";
 import { Events, makeEvents } from "./events";
 
@@ -7,7 +7,7 @@ type TagsEvents = {
 }
 export type Tags = {
     events: Events<TagsEvents>;
-    manifest: Manifest | undefined;
+    all: (string | TagInfo)[];
     container: HTMLDivElement;
     items: Record<string, HTMLButtonElement>;
     get selected(): string[];
@@ -15,7 +15,7 @@ export type Tags = {
     select(tag: string): boolean;
     deselect(tag: string): boolean;
     update(): void;
-    initAsync(manifest: Manifest | undefined): Promise<void>;
+    initAsync(tags: (string | TagInfo)[]): Promise<void>;
 }
 const selected: string[] = ['top-rated'];
 function load(available: string[]): boolean {
@@ -33,9 +33,9 @@ function save() {
 }
 const tags: Tags = {
     events: makeEvents(),
+    all: [],
     container: make('div', e => e.id = 'tags'),
     items: {},
-    manifest: undefined,
     get selected() {
         return selected;
     },
@@ -66,9 +66,8 @@ const tags: Tags = {
         return true;
     },
     update(): void {
-        const defined = this.manifest?.tags ?? [];
-        for (let i = 0; i < defined.length; ++i) {
-            const tag = defined[i];
+        for (let i = 0; i < tags.all.length; ++i) {
+            const tag = tags.all[i];
             const str = typeof tag === 'string' ? tag : tag.tag;
             if (!(str in tags.items)) {
                 tags.items[str] = make('button', e => {
@@ -100,9 +99,9 @@ const tags: Tags = {
             ele.value = selected.includes(str) ? "selected" : "";
         }
     },
-    async initAsync(manifest: Manifest | undefined) {
-        tags.manifest = manifest;
-        const available = (manifest?.tags ?? []).map(t => typeof t !== 'string' ? t.tag : t);
+    async initAsync(manifestTags: (string | TagInfo)[]) {
+        tags.all = [...manifestTags];
+        const available = tags.all.map(t => typeof t !== 'string' ? t.tag : t);
         load(available);
         tags.events.emit('onSelectionChanged', selected);
         tags.update();
