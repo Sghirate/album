@@ -15,7 +15,7 @@ export default defineConfig(({ mode }) => {
                 },
                 output: {
                     image: {
-                        maxPixelDimension: 3000,
+                        maxPixelDimension: 2000,
                         format: {
                             type: 'jpg',
                             options: {
