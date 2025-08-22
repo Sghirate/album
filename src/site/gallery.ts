@@ -52,6 +52,9 @@ const gallery: Gallery = {
           make('img', img => {
             img.id = `img-${name}`;
             img.src = photo.thumb.url!;
+            img.width = photo.thumb.width;
+            img.height = photo.thumb.height;
+            img.alt = name;
             e.appendChild(img);
           });
         });
