@@ -1,6 +1,6 @@
 import { createHash } from 'crypto';
 import { createReadStream } from "fs";
-import { mkdir, readdir, readFile, rm, rmdir, stat, unlink, writeFile } from "fs/promises";
+import { mkdir, readdir, readFile, rm, stat, unlink, writeFile } from "fs/promises";
 import { join, resolve } from "path";
 import { Logger } from "vite";
 import { CacheOptions, OutputOptions } from "./options";

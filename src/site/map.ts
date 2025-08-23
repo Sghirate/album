@@ -58,7 +58,7 @@ const map: Map = {
             lat: 47.80030,
             lng: 13.04360,
         }, 6);
-        const tiles = new TileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        new TileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             minZoom: 3,
             attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
