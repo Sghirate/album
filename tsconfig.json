@@ -24,7 +24,12 @@
     ]
   },
   "include": [
+    "src/site",
+    "src/shared",
     "src/*.d.ts",
     "src/**/*.ts"
-  ]
+  ],
+  "references": [{
+    "path": ".tsconfig.node.json"
+  }]
 }
