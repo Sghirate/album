@@ -11,6 +11,7 @@ type GalleryEvents = {
 }
 export type Gallery = {
     events: Events<GalleryEvents>;
+    element: HTMLElement;
     container: HTMLDivElement;
     items: Record<string, HTMLAnchorElement>;
     isInitialized: boolean;
@@ -19,9 +20,14 @@ export type Gallery = {
     update(selection: SelectedPhoto[]): void;
     initAsync(): Promise<void>;
 }
+const element = make('div');
 const gallery: Gallery = {
     events: makeEvents(),
-    container: make('div', e => e.id = 'gallery'),
+    element,
+    container: make('div', e => {
+        e.id = 'gallery';
+        element.appendChild(e);
+    }),
     items: {},
     isInitialized: false,
     lightbox: new PhotoSwipeLightbox({

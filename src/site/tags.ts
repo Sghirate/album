@@ -8,6 +8,7 @@ type TagsEvents = {
 export type Tags = {
     events: Events<TagsEvents>;
     all: (string | TagInfo)[];
+    element: HTMLElement;
     container: HTMLDivElement;
     items: Record<string, HTMLButtonElement>;
     get selected(): string[];
@@ -31,10 +32,44 @@ function load(available: string[]): boolean {
 function save() {
     localStorage.setItem('tags', JSON.stringify(selected));
 }
+const element = make('details', e => {
+    e.appendChild(make('summary', e => {
+        e.id = 'tags-summary';
+        e.innerText = 'Tags';
+    }));
+    // TODO
+});
+function display(tag: string): string {
+    const info: TagInfo = tags.all.find(t => typeof t !== 'string' && t.tag === tag) as TagInfo;
+    // TODO: LOCA!
+    return info?.en ?? tag;
+
+}
+function updateSummary() {
+    const summary = tags.element.querySelector('#tags-summary');
+    if (summary) {
+        if (selected.length === 0) {
+            summary.innerHTML = 'Tags';
+        } else if (selected.length < 3) {
+            summary.innerHTML = `Tags: ${selected.map(t => display(t)).join(',')}`;
+        } else {
+            summary.innerHTML = `Tags: ${selected.map(t => display(t)).slice(0, 2).join(',')}...+${selected.length - 2}`
+        }
+    }
+}
+function handleChange() {
+    save();
+    updateSummary();
+    tags.events.emit('onSelectionChanged', selected);
+}
 const tags: Tags = {
     events: makeEvents(),
     all: [],
-    container: make('div', e => e.id = 'tags'),
+    element,
+    container: make('div', e => {
+        e.id = 'tags';
+        element.appendChild(e);
+    }),
     items: {},
     get selected() {
         return selected;
@@ -42,8 +77,7 @@ const tags: Tags = {
     selectOnly(tag: string): boolean {
         selected.length = 0;
         selected.push(tag);
-        save();
-        tags.events.emit('onSelectionChanged', selected);
+        handleChange();
         return true;
     },
     select(tag: string): boolean {
@@ -51,8 +85,7 @@ const tags: Tags = {
             return false;
         }
         selected.push(tag);
-        save();
-        tags.events.emit('onSelectionChanged', selected);
+        handleChange();
         return true;
     },
     deselect(tag: string): boolean {
@@ -61,8 +94,7 @@ const tags: Tags = {
             return false;
         }
         selected.splice(idx, 1);
-        save();
-        tags.events.emit('onSelectionChanged', selected);
+        handleChange();
         return true;
     },
     update(): void {
@@ -89,15 +121,14 @@ const tags: Tags = {
                             e.value = "selected";
                         }
                     });
-                    // TODO: LOCA!
-                    const en = (typeof tag !== 'string') ? tag.en : undefined;
-                    e.innerHTML = en ?? str;
+                    e.innerText = display(str);
                     tags.container.appendChild(e);
                 });
             }
             const ele = tags.items[str];
             ele.value = selected.includes(str) ? "selected" : "";
         }
+        updateSummary();
     },
     async initAsync(manifestTags: (string | TagInfo)[]) {
         tags.all = [...manifestTags];

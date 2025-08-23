@@ -9,16 +9,24 @@ type MapEvents = {
 }
 export type Map = {
     events: Events<MapEvents>;
+    element: HTMLElement;
     container: HTMLDivElement;
     map: LeafletMap | undefined;
     markers: Record<string, Marker>;
     update(selection: SelectedPhoto[]): void;
     initAsync(): Promise<void>;
 }
+const element = make('details', e => {
+    e.appendChild(make('summary', s => {
+        s.innerText = 'Map';
+    }));
+});
 const map: Map = {
     events: makeEvents(),
+    element,
     container: make('div', e => {
         e.id = 'map';
+        element.appendChild(e);
     }),
     map: undefined,
     markers: {},

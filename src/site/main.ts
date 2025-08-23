@@ -10,9 +10,9 @@ if (!app) {
     throw `FATAL: app element not found!`
 }
 app?.replaceChildren(
-    tags.container,
-    map.container,
-    gallery.container,
+    tags.element,
+    map.element,
+    gallery.element,
 )
 
 function updateSelection(tags: string[]) {
