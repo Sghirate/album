@@ -1,8 +1,11 @@
 {
     "compilerOptions": {
         "composite": true,
+        "target": "esnext",
         "module": "esnext",
-        "moduleResolution": "node"
+        "moduleResolution": "node",
+        "downlevelIteration": true,
+        "allowSyntheticDefaultImports": true
     },
     "include": ["vite.config.ts", "src/vite", "src/shared"]
 }
