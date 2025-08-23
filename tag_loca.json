@@ -74,5 +74,92 @@
     "marmot": {
         "de": "Murmeltier",
         "en": "Marmot"
+    },
+    "chengdu": {
+        "en": "Chengdu"
+    },
+    "china": {
+        "en": "China"
+    },
+    "japan": {
+        "en": "Japan"
+    },
+    "tokyo": {
+        "en": "Tokyo"
+    },
+    "deer": {
+        "en": "Deer",
+        "de": "Reh"
+    },
+    "taiwan": {
+        "en": "Taiwan"
+    },
+    "schwarzer Berg": {
+        "en": "Schwarzer Berg"
+    },
+    "Stockholm": {
+        "en": "Stockholm"
+    },
+    "sweden": {
+        "en": "Sweden",
+        "de": "Schweden"
+    },
+    "uk": {
+        "en": "United Kingdom",
+        "de": "Vereinigtes Königreich"
+    },
+    "winchester": {
+        "en": "Winchester"
+    },
+    "usa": {
+        "en": "USA"
+    },
+    "cow": {
+        "en": "Cow",
+        "de": "Kuh"
+    },
+    "werfen": {
+        "en": "Werfen"
+    },
+    "castle": {
+        "en": "Castle",
+        "de": "Burg"
+    },
+    "salzachklamm": {
+        "en": "Salzachklamm"
+    },
+    "gmunden": {
+        "en": "Gmunden"
+    },
+    "hochosterwitz": {
+        "en": "Hochosterwitz"
+    },
+    "feldkirch": {
+        "en": "Feldkirch"
+    },
+    "liechtenstein": {
+        "en": "Liechtenstein"
+    },
+    "york": {
+        "en": "York"
+    },
+    "mohonk": {
+        "en": "Mohonk Mountain"
+    },
+    "ny": {
+        "en": "New York"
+    },
+    "bischofshofen": {
+        "en": "Bischofshofen"
+    },
+    "winnerfall": {
+        "en": "Winnerfall"
+    },
+    "duerrnberg": {
+        "en": "Dürrnberg"
+    },
+    "vienna": {
+        "en": "Vienna",
+        "de": "Wien"
     }
 }
