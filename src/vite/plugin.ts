@@ -50,12 +50,13 @@ export default function gallery(options: PluginOptions): Plugin {
             const tagSet = new Set<string>();
             const photos: Record<string, PhotoInfo> = [...input.all()].reduce((r, p) => {
                 if (p.image.url !== undefined && p.thumb.url !== undefined) {
-                    (p.meta.subject ?? []).forEach(t => tagSet.add(t));
+                    (typeof p.meta.subject === 'string' ? [p.meta.subject] : (p.meta.subject ?? []))
+                        .forEach(t => tagSet.add(t));
                     const info: PhotoInfo = {
                         long: p.meta.longitude,
                         lat: p.meta.latitude,
                         stars: p.meta.Rating,
-                        tags: p.meta.subject ?? [],
+                        tags: typeof p.meta.subject === 'string' ? [p.meta.subject] : (p.meta.subject ?? []),
                         ts: p.meta.DateTimeOriginal?.getTime(),
                         image: p.image,
                         thumb: p.thumb,

@@ -8,10 +8,10 @@ import { Photo } from "./photo";
 */
 export function hasExtension(...extensions: string[]): PathFilter {
     const lExtensions = extensions.map(e => e.toLowerCase());
-    return function(path: string): boolean {
+    return function (path: string): boolean {
         const idx = path.lastIndexOf('.');
-        return idx > 0 
-        && lExtensions.includes(path.substring(idx + 1).toLowerCase());
+        return idx > 0
+            && lExtensions.includes(path.substring(idx + 1).toLowerCase());
     }
 }
 const SupportedExtensions = ['jpg', 'jpeg', 'jpe', 'avif', 'png', 'tiff', 'tif'];
@@ -29,13 +29,13 @@ export const hasImageExtension = hasExtension(...SupportedExtensions);
  * If the photo does not have a rating tag, it will automatically be rejecetd.
  */
 export function hasMinimumRating(stars: number): PhotoFilter {
-    return function(photo: Photo): boolean {
+    return function (photo: Photo): boolean {
         return photo.meta.Rating !== undefined
             && photo.meta.Rating >= stars;
     }
 }
 /** Check if the photo has a GPS Tag. */
-export const hasGPSTag: PhotoFilter = function(photo: Photo) {
+export const hasGPSTag: PhotoFilter = function (photo: Photo) {
     return photo.meta.longitude !== undefined
         && photo.meta.latitude !== undefined;
 }
@@ -44,9 +44,21 @@ export const hasGPSTag: PhotoFilter = function(photo: Photo) {
  * Any tag from the set satifies this check. Case sensitive!
  */
 export function hasAnySubject(...tags: string[]): PhotoFilter {
-    return function(photo: Photo) {
-        return photo.meta.subject !== undefined
-            && photo.meta.subject.some(t => tags.includes(t));
+    return function (photo: Photo) {
+        if (photo.meta.subject === undefined) {
+            return false;
+        }
+        if (typeof photo.meta.subject === 'string'
+            && tags.includes(photo.meta.subject)
+        ) {
+            return true;
+        }
+        if (Array.isArray(photo.meta.subject)
+            && photo.meta.subject.some(t => tags.includes(t))
+        ) {
+            return true;
+        }
+        return false;
     }
 }
 //#endregion Photo Filters
@@ -55,8 +67,8 @@ export function hasAnySubject(...tags: string[]): PhotoFilter {
 /** Invert the result of another filter.
  * Can be used to ensure a photo does not include a given subject by inverting the hasAnySubject filter.
  */
-export function invertFilter<T = string|Photo>(filter: (arg: T) => boolean): (arg: T) => boolean {
-    return function(arg: T): boolean {
+export function invertFilter<T = string | Photo>(filter: (arg: T) => boolean): (arg: T) => boolean {
+    return function (arg: T): boolean {
         return !filter(arg);
     }
 }

@@ -11,7 +11,7 @@ export interface PhotoMetaData {
     /** Where was the photo taken. Parsed from a GPS tag (if present). */
     latitude?: number;
     /** What does the photo contain. */
-    subject?: string[];
+    subject?: (string[])|string;
     JFIFVersion?: number;
     ResolutionUnit?: string;
     XResolution?: number;
