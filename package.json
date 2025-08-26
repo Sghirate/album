@@ -16,7 +16,6 @@
   },
   "devDependencies": {
     "@rollup/pluginutils": "^5.2.0",
-    "@sghirate/vite-gallery": "file:../vite-gallery",
     "@types/leaflet": "^1.9.20",
     "@types/node": "^24.3.0",
     "exifr": "^7.1.3",
