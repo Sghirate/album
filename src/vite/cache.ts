@@ -57,6 +57,7 @@ export function createCache(logger: Logger, options: CacheOptions): Cache {
             }
         }
         if (!success) {
+            success = true;
             await mkdir(join(dir, optionsHash), { recursive: true });
         }
         return success;
