@@ -5,19 +5,40 @@ import { make } from './dom';
 import { Events, makeEvents } from './events';
 import { SelectedPhoto } from './types';
 
+/** Events emitted by Gallery.events */
 type GalleryEvents = {
     onInitialized: undefined;
     onError: Error | string;
 }
+/** Gallery module. Responsible for update the photoswipe element with the selected photos. */
 export type Gallery = {
+    /** Event Emitter. */
     events: Events<GalleryEvents>;
+    /** Root element of the gallery. Will be added to the app. */
     element: HTMLElement;
+    /** Container element for photos. */
     container: HTMLDivElement;
+    /** Photo items. Photo anchrs will be created the first time they are needed and then kept
+     * in the mapping - however removed from the container element, if they are not selected for display.
+     */
     items: Record<string, HTMLAnchorElement>;
+    /** True, if the photoswipe lightbox is initialized. */
     isInitialized: boolean;
+    /** Photoswipe lightbox instance. */
     lightbox: PhotoSwipeLightbox;
+    /** Open a photo in the photoswipe lightbox.
+     * @param name The photo name as it appears in the app manifest.
+     * @returns true if the photo is in the set of selected photos and could be opened.
+     */
     open(name: string): boolean;
+    /** Update the visible elements based on a photo selection.
+     * @param selection Set of photos to dispplay in the gallery.
+     */
     update(selection: SelectedPhoto[]): void;
+    /** Initializes the photoswipe lightbox - should be the first module function that is being called.
+     * Note: the module element will already exist before initializing the gallery.
+     * 
+     */
     initAsync(): Promise<void>;
 }
 const element = make('div');

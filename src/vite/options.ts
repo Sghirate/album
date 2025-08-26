@@ -40,10 +40,13 @@ type OutputFormat = OutputFormatJpg | OutputFormatPng | OutputFormatWebp | Outpu
 export type ImageOutputParams = {
     /** Maximum pixel size of images. Will resize images to fit into maxPixelDimension x maxPixelDimension. */
     maxPixelDimension: number;
+    /** Output format. Wrapper around sharp's toFormat parameters. */
     format: OutputFormat;
 }
 export type OutputOptions = {
+    /** Output parameters for the image shape of a photo. */
     image: ImageOutputParams;
+    /** Output paramters for the thumbnail shape of a photo. */
     thumb: ImageOutputParams;
 }
 //#endregion Output
@@ -51,7 +54,7 @@ export type OutputOptions = {
 //#region Filter
 /** Plugin will only work with files for which the filter returns true. */
 export type PathFilter = (path: string) => boolean;
-
+/** Plugin will only work with photos for which the filter returns true. */
 export type PhotoFilter = (photo: Photo) => boolean;
 
 export interface FilterOptions {

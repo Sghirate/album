@@ -11,12 +11,12 @@ import { makeContentHash } from './makeContentHash';
 import { PluginOptions } from './options';
 import { Photo } from './photo';
 import { IncomingMessage, ServerResponse } from 'http';
-
 export {
     hasAnySubject, hasExtension, hasGPSTag, hasImageExtension,
     hasMinimumRating, invertFilter
 } from './filter';
 
+/** Vite plugin instance. */
 export default function gallery(options: PluginOptions): Plugin {
     const logger = createLogger(options.logLevel, {
         prefix: '[gallery]',

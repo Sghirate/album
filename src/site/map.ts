@@ -4,16 +4,32 @@ import { make } from "./dom";
 import { Events, makeEvents } from "./events";
 import { SelectedPhoto } from "./types";
 
+/** Events emitted bt map.events */
 type MapEvents = {
     onRequestOpen: string;
 }
+/** Map module. Wraps around a leaflet map. */
 export type Map = {
+    /** Event Emitter. */
     events: Events<MapEvents>;
+    /** Root element for the map. Will be added to the app */
     element: HTMLElement;
+    /** Container element for the map. The element that will be controlled by leaflet. */
     container: HTMLDivElement;
+    /** Leafelet map instance. */
     map: LeafletMap | undefined;
+    /** Map markers. Mapping of photo name (as it appears in the manifest) to Marker instance.
+     * Markers will be created the first time they are requested to be displayed. Afterwards they
+     * are kept around, however not added to the map if they are currently not selected for display.
+     */
     markers: Record<string, Marker>;
+    /** Update the map based on a set of selected photos.
+     * Will update which markers are visible on the map - however does not performa any kind of re-framing/zooming.
+     */
     update(selection: SelectedPhoto[]): void;
+    /** Initialize the map module. Sets up leaflet with a default location and the openstreetmap later.
+     * The module element can already used before calling initializeAsync.
+     */
     initAsync(): Promise<void>;
 }
 const element = make('details', e => {

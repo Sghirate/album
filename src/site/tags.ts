@@ -2,23 +2,47 @@ import { TagInfo } from "../shared/types";
 import { make } from "./dom";
 import { Events, makeEvents } from "./events";
 
+/** Events emitted by tags.events */
 type TagsEvents = {
     onSelectionChanged: string[];
 }
 export type Tags = {
+    /** Event emitter. */
     events: Events<TagsEvents>;
+    /** Set of all available tags. Taken from the manifest. */
     all: (string | TagInfo)[];
+    /** Root element for the tag selection. */
     element: HTMLElement;
+    /** Container element housing the tag buttons. */
     container: HTMLDivElement;
+    /** Mapping of tag -> photo. The tag string is the short name of the tag, not localized. Taken from the manifest.
+     */
     items: Record<string, HTMLButtonElement>;
+    /** Actively selected tags. */
     get selected(): string[];
+    /** Exclusive tag selection. Deselects all other tags.
+     * @param tag short name of the tag. Taken from the manifest.
+     */
     selectOnly(tag: string): boolean;
+    /** Select a given tag. 
+     * @param tag short name of the tag. Taken from the manifest.
+    */
     select(tag: string): boolean;
+    /** Deselect a given tag. 
+     * @param tag short name of the tag. Taken from the manifest.
+    */
     deselect(tag: string): boolean;
+    /** Update the dom elements of the tag selection. */
     update(): void;
+    /** Initialize the tag selectn. Seeds the list of available tags and loads the
+     * previously selected tag from the browsers localStorage.
+     * @param tags Available tags from the manifest.
+     */
     initAsync(tags: (string | TagInfo)[]): Promise<void>;
 }
+/** Backing storage. */
 const selected: string[] = ['top-rated'];
+/** Read selected tasg from localSotrage. Will only load tags that were found in the manifest, other tags are ignored. */
 function load(available: string[]): boolean {
     const str = localStorage.getItem('tags');
     const json = str && JSON.parse(str);
@@ -29,6 +53,7 @@ function load(available: string[]): boolean {
     selected.push(...json.filter(t => available.includes(t)));
     return true;
 }
+/** Save selected tag array to localStorage. */
 function save() {
     localStorage.setItem('tags', JSON.stringify(selected));
 }
@@ -39,12 +64,13 @@ const element = make('details', e => {
     }));
     // TODO
 });
+/** Get the display string for a tag. */
 function display(tag: string): string {
     const info: TagInfo = tags.all.find(t => typeof t !== 'string' && t.tag === tag) as TagInfo;
     // TODO: LOCA!
     return info?.en ?? tag;
-
 }
+/** Update the summary of selected tags. */
 function updateSummary() {
     const summary = tags.element.querySelector('#tags-summary');
     if (summary) {
@@ -57,6 +83,7 @@ function updateSummary() {
         }
     }
 }
+/** Sync tag state. Writes the selected tags to localStorage, updates the DOM and emits the onSelectionChanged event. */
 function handleChange() {
     save();
     updateSummary();

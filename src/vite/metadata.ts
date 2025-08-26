@@ -1,5 +1,6 @@
 /** Wrapper around the properties parsed by exifr.
  * Not complete; Not fully commented; Not guaranteed to have the correct type.
+ * TODO: document more properties.
  */
 export interface PhotoMetaData {
     /** When was the photo taken. */

@@ -9,10 +9,18 @@ import { PhotoMetaData } from "./metadata";
 import { InputOptions, OutputOptions } from "./options";
 import { Photo } from "./photo";
 
+/** Input registry. */
 export interface Input {
+    /** Read the input folder and popupdate the internal sotrage with all photos (matching the filter, if provided). */
     initAsync(filter?: Filter, server?: ViteDevServer): Promise<boolean>;
+    /** Clean up the registry. Mostly to unsubscribe from the file system watcher. */
     shutdown(): void;
+    /** Try to get a photo from the input registry. Based on the name.
+     * Photo name is either a ISO8601-like timestamp of the date & time the photo was taken,
+     * or the file name of the photo (without extension) if no original date could be determined from the photos metadata.
+     */
     get(name: string): Photo|undefined;
+    /** Iterate over all registered photos. */
     all(): Generator<Photo>;
 }
 export function createInput(logger: Logger, options: InputOptions, output: OutputOptions): Input {

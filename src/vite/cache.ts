@@ -7,6 +7,7 @@ import { CacheOptions, OutputOptions } from "./options";
 import { Photo } from "./photo";
 import { Shapes } from '../shared/types';
 
+/** Caches converted images. */
 export interface Cache {
     /** Initialize the Cache. Will:
      * - Create the directory if it doesn't exist.
@@ -74,6 +75,9 @@ export function createCache(logger: Logger, options: CacheOptions): Cache {
     }
 
     return {
+        /** Initialize the cache. Makes sure the cache directory exists and reads previously cached images.
+         * Note: A change to the output settings results in a new cache directory, invalidating previously cached images.
+         */
         async initAsync(outputOptions: OutputOptions) {
             optionsHash = createHash('sha256').update(JSON.stringify(outputOptions)).digest('hex');
 
@@ -99,6 +103,10 @@ export function createCache(logger: Logger, options: CacheOptions): Cache {
 
             return success;
         },
+        /** Check if the cache contains the output of an image.
+         * @param photo As read and stored by the input registry.
+         * @param shape Output image shape of a photo.
+         */
         async hasAsync(photo: Photo, shape: Shapes): Promise<boolean> {
             const storedHash = photos.get(photo.name);
             if (storedHash === undefined) {
@@ -119,6 +127,11 @@ export function createCache(logger: Logger, options: CacheOptions): Cache {
                 return false;
             }
         },
+        /** Attempt to read the output of an image.
+         * @param photo As read and stored by the input registry.
+         * @param shape Output image shape of a photo.
+         * @returns undefined if the image does not exist in the cache. Otherwise the binary data of the file.
+        */
         async getAsync(photo: Photo, shape: Shapes): Promise<Buffer | undefined> {
             const storedHash = photos.get(photo.name);
             if (storedHash === undefined) {
@@ -138,6 +151,11 @@ export function createCache(logger: Logger, options: CacheOptions): Cache {
                 return undefined;
             }
         },
+        /** Write an output image to the chache.
+         * @param photo As read and stored by the input registry.
+         * @param shape Output image shape of a photo.
+         * @returns true if the image was successfully written to the disk.
+         */
         async storeAsync(photo: Photo, shape: Shapes, data: Buffer): Promise<boolean> {
             const storedHash = photos.get(photo.name);
             const storedCachePath = storedHash && cacheFile(photo.name, shape, storedHash);
