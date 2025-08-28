@@ -9,10 +9,13 @@ import { Photo } from "./photo";
  * @param options parameters used to control the conversion. Mostly a wrapper around sharp toFormat parameters.
  */
 export async function convertAsync(photo: Photo, dim: Dimensions, options: ImageOutputParams): Promise<Buffer> {
-    return await sharp(photo.path)
-        .resize(dim.width, dim.height)
-        .toFormat(options.format.type, options.format.options)
-        .toBuffer();
+    const s = sharp(photo.path);
+    if (options.keepMetadata === true) {
+        s.keepMetadata();
+    }
+    s.resize(dim.width, dim.height);
+    const buffer = await s.toFormat(options.format.type, options.format.options).toBuffer();
+    return buffer;
 }
 /** Read the pixel size of an image. */
 export async function getSizeAsync(path: string): Promise<Dimensions> {

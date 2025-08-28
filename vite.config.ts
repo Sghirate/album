@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
                 },
                 output: {
                     image: {
+                        keepMetadata: true,
                         maxPixelDimension: 2000,
                         format: {
                             type: 'jpg',

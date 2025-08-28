@@ -40,6 +40,8 @@ type OutputFormat = OutputFormatJpg | OutputFormatPng | OutputFormatWebp | Outpu
 export type ImageOutputParams = {
     /** Maximum pixel size of images. Will resize images to fit into maxPixelDimension x maxPixelDimension. */
     maxPixelDimension: number;
+    /** If set to true the source file metadata will be retained. */
+    keepMetadata?: boolean
     /** Output format. Wrapper around sharp's toFormat parameters. */
     format: OutputFormat;
 }
