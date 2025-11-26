@@ -47,6 +47,12 @@ export default defineConfig(({ mode }) => {
             }),
         ],
         build: {
+            assetsInlineLimit(filePath: string): boolean|undefined {
+                if (filePath.includes('leaflet/dist')) {
+                    return false;
+                }
+                return undefined;
+            },
             manifest: true,
         },
     }

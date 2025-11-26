@@ -1,8 +1,15 @@
-import { Map as LeafletMap, Marker, TileLayer } from "leaflet";
+import { Icon, Map as LeafletMap, Marker, TileLayer } from "leaflet";
 import 'leaflet/dist/leaflet.css';
 import { make } from "./dom";
 import { Events, makeEvents } from "./events";
 import { SelectedPhoto } from "./types";
+import markerIconUrl from  "leaflet/dist/images/marker-icon.png";
+import markerIconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
+
+Icon.Default.prototype.options.iconUrl = markerIconUrl;
+Icon.Default.prototype.options.iconRetinaUrl = markerIconRetinaUrl;
+Icon.Default.prototype.options.shadowUrl = markerShadowUrl;
 
 /** Events emitted bt map.events */
 type MapEvents = {
