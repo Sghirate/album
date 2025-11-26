@@ -1,0 +1,15 @@
+<IfModule mod_headers.c>
+    <FilesMatch ".(ico|jpg|jpeg|gif|png|pdf|mp3|mp4|webp|json|js)$">
+        Header set Cache-Control "public, max-age=31536000, no-transform"
+    </FilesMatch>
+    <FilesMatch ".(html|htm|xml|txt|xsl|css)$">
+        Header set Cache-Control "public, max-age=7200, must-revalidate"
+    </FilesMatch>
+</IfModule>
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php83” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php83 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit
