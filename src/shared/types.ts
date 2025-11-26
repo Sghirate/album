@@ -23,6 +23,7 @@ export type TagInfo = {
 export type ImageInfo = Dimensions & {
     /** Will be undefined if the image has not been written (yet). */
     url?: string;
+    hash?: string;
 }
 /** General information about a photo loaded form the input folder. */
 export type PhotoInfo = {
@@ -44,7 +45,7 @@ export type PhotoInfo = {
 /** Manifest generated during builds/previews. Containing all the info the client/website needs to load and display the gallery. */
 export type Manifest = {
     /** All tags available to the client. */
-    tags: (TagInfo|string)[];
+    tags: string[];
     /** All photos available to the client. */
     photos: Record<string, PhotoInfo>;
 }

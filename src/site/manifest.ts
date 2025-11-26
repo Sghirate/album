@@ -1,6 +1,9 @@
+import Binary from "../shared/binary";
 import { Manifest } from "../shared/types";
 import { Events, makeEvents } from "./events";
-import url from 'virtual:gallery:url';
+import urls from 'virtual:gallery:urls';
+
+const BIN = true;
 
 /** Events emitted by manifest.events */
 type ManifestEvents = {
@@ -19,10 +22,26 @@ const manifest: Manifest & {
     events: makeEvents(),
     async initAsync() {
         try {
-            const res = await fetch(url);
-            const json = await res.json() as Partial<Manifest>;
-            manifest.tags = json.tags ?? [];
-            manifest.photos = json.photos ?? {};
+            if (BIN) {
+                const res = await fetch(urls.bin);
+                const buf = await res.arrayBuffer();
+                const m = new Binary(buf).readManifest();
+                Object.entries(m.photos).forEach(([name, info]) => {
+                    info.image.url = urls.img.image
+                        .replace('#NAME#', name)
+                        .replace('#HASH#', info.image.hash ?? '');
+                    info.thumb.url = urls.img.thumb
+                        .replace('#NAME#', name)
+                        .replace('#HASH#', info.thumb.hash ?? '');
+                });
+                manifest.tags = m.tags;
+                manifest.photos = m.photos;
+            } else {
+                const res = await fetch(urls.json);
+                const json = await res.json() as Partial<Manifest>;
+                manifest.tags = json.tags ?? [];
+                manifest.photos = json.photos ?? {};
+            }
             manifest.events.emit('onLoaded', manifest);
         } catch (e) {
             const err = ((e instanceof Error) || typeof e === 'string') ? e : 'Unknown Error';

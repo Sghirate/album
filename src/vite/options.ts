@@ -44,6 +44,12 @@ export type ImageOutputParams = {
     keepMetadata?: boolean
     /** Output format. Wrapper around sharp's toFormat parameters. */
     format: OutputFormat;
+    /** File name schema. Will be used to construct the name of an image file. Available placeholders:
+     * #NAME#: Name of the Photo
+     * #HASH#: Content hash (of the generated output file)
+     * #EXT#: Extension (including dot)
+     */
+    schema: string;
 }
 export type OutputOptions = {
     /** Output parameters for the image shape of a photo. */
@@ -97,10 +103,5 @@ export type PluginOptions = {
      * This results in more disk space being used by vite, however images can be served faster.
      */
     cache?: CacheOptions;
-    /** Function used to generate the gallery manifest that will be served during development and create during build.
-     * Will include all the index-data that is loaded while the gallery is being intialized on the website and used to
-     * search and filter the photos.
-     */
-    manifest?: ManifestGenerator;
 }
 //#endregion Plugin

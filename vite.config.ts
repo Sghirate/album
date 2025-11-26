@@ -1,4 +1,4 @@
-import { defineConfig, loadEnv } from 'vite';
+import { build, defineConfig, loadEnv } from 'vite';
 import gallery, { hasImageExtension } from './src/vite/plugin';
 
 export default defineConfig(({ mode }) => {
@@ -22,7 +22,8 @@ export default defineConfig(({ mode }) => {
                             options: {
                                 quality: 90,
                             }
-                        }
+                        },
+                        schema: '#NAME#_image_#HASH##EXT#',
                     },
                     thumb: {
                         maxPixelDimension: 256,
@@ -32,6 +33,7 @@ export default defineConfig(({ mode }) => {
                                 quality: 50,
                             },
                         },
+                        schema: '#NAME#_thumb_#HASH##EXT#',
                     },
                 },
                 filter: {
@@ -43,6 +45,9 @@ export default defineConfig(({ mode }) => {
                     dir: './node_modules/.cache/gallery',
                 },
             }),
-        ]
+        ],
+        build: {
+            manifest: true,
+        },
     }
 })
