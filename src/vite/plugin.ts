@@ -17,6 +17,8 @@ export {
     hasAnySubject, hasExtension, hasGPSTag, hasImageExtension,
     hasMinimumRating, invertFilter
 } from './filter';
+import ProgressBar from 'progress';
+import colors from 'picocolors';
 
 function tryWrite(fn: (buf: ArrayBufferLike) => number): Uint8Array {
     const MaxSize = 128 * 1024 * 1024;
@@ -232,6 +234,31 @@ export default function gallery(options: PluginOptions): Plugin {
             return tryServeImageAsync(res, name, shape);
         }
     }
+    async function emitAllPhotosAsync(): Promise<number> {
+        let done = 0;
+        const emitPromises: Promise<void>[] = [];
+        let bar;
+        for (const photo of input.all()) {
+            for (const shape of ['image', 'thumb'] as const) {
+                emitPromises.push(emitPhotoAsync(photo, shape).finally(() => {
+                    ++done;
+                    bar?.tick({ done, total: emitPromises.length });
+                }));
+            }
+        }
+        const transforming = `${colors.magenta('Photos:')} :done/:total | `;
+        const barText = `${colors.cyan(`[:bar]`)}`
+        const barFormat = `${colors.green('Emitting Images')} ${barText} :percent | ${transforming}Time: :elapseds`
+        bar = new ProgressBar(barFormat, {
+            width: 40,
+            complete: '\u2588',
+            incomplete: '\u2591',
+            total: emitPromises.length,
+        });
+        await Promise.all(emitPromises);
+        bar.terminate();
+        return emitPromises.length;
+    }
 
     return {
         name: 'vite-plugin-gallery',
@@ -297,15 +324,11 @@ export default function gallery(options: PluginOptions): Plugin {
             if (!success) {
                 throw `Gallery not initialized!`;
             }
+            if (viteConfig.command === 'build') {
+                await emitAllPhotosAsync();
+            }
         },
         async generateBundle() {
-            const emitPromises: Promise<void>[] = [];
-            for (const photo of input.all()) {
-                for (const shape of ['image', 'thumb'] as const) {
-                    emitPromises.push(emitPhotoAsync(photo, shape));
-                }
-            }
-            await Promise.all(emitPromises);
             const manifest = await generateManifest();
             this.emitFile({
                 fileName: manifestName,
