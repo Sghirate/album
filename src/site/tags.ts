@@ -1,6 +1,31 @@
-import { TagInfo } from "../shared/types";
+import Binary from "../shared/binary";
+import { TagInfo, TagLoca } from "../shared/types";
 import { make } from "./dom";
 import { Events, makeEvents } from "./events";
+
+//#region Loca
+let availableTagLoca: TagLoca = {};
+let selectedTagLang: string | null = null;
+let tagTranslations: string[] | null = [];
+function translateAllTags() {
+    tags?.items?.forEach((btn, tag) => btn.innerText = display(tag));
+}
+async function setLangAsync(lang: string) {
+    selectedTagLang = lang;
+    let translations: string[] | null = null;
+    if (lang in availableTagLoca) {
+        const res = await fetch(availableTagLoca[lang]);
+        const buf = await res.arrayBuffer();
+        translations = new Binary(buf).readTagLoca();
+    }
+    if (selectedTagLang !== lang) {
+        return;
+    }
+    tagTranslations = translations;
+    translateAllTags();
+    updateSummary();
+}
+//#endregion Loca
 
 /** Events emitted by tags.events */
 type TagsEvents = {
@@ -34,11 +59,13 @@ export type TagsModule = {
     deselect(tag: string): boolean;
     /** Update the dom elements of the tag selection. */
     update(): void;
+    /** Called when the UI language changes. Should update the tags with the localized version. */
+    updateLanguage(lang: string): void;
     /** Initialize the tag selectn. Seeds the list of available tags and loads the
      * previously selected tag from the browsers localStorage.
      * @param tags Available tags from the manifest.
      */
-    initAsync(tags: (string | TagInfo)[]): Promise<void>;
+    initAsync(tags: (string | TagInfo)[], tagLoca?: TagLoca): Promise<void>;
 }
 /** Backing storage. */
 const selected: string[] = ['top-rated'];
@@ -59,27 +86,34 @@ function save() {
 }
 const element = make('details', e => {
     e.appendChild(make('summary', e => {
-        e.id = 'tags-summary';
-        e.innerText = 'Tags';
+        e.appendChild(make('span', e => {
+            e.id = 'tags-title';
+            e.innerText = 'Tags';
+            e.dataset.loca = 'tags';
+        }));
+        e.appendChild(make('span', e => {
+            e.id = 'tags-summary';
+            e.innerText = '';
+        }));
     }));
     // TODO
 });
 /** Get the display string for a tag. */
 function display(tag: string): string {
-    const info: TagInfo = tags.all.find(t => typeof t !== 'string' && t.tag === tag) as TagInfo;
-    // TODO: LOCA!
-    return info?.en ?? tag;
+    const idx = tags?.all?.indexOf(tag) ?? -1;
+    const loca = idx >= 0 ? (tagTranslations?.at(idx) ?? null) : null;
+    return loca || tag;
 }
 /** Update the summary of selected tags. */
 function updateSummary() {
     const summary = tags.element.querySelector('#tags-summary');
     if (summary) {
         if (selected.length === 0) {
-            summary.innerHTML = 'Tags';
+            summary.innerHTML = '';
         } else if (selected.length < 3) {
-            summary.innerHTML = `Tags: ${selected.map(t => display(t)).join(',')}`;
+            summary.innerHTML = `: ${selected.map(t => display(t)).join(',')}`;
         } else {
-            summary.innerHTML = `Tags: ${selected.map(t => display(t)).slice(0, 2).join(',')}...+${selected.length - 2}`
+            summary.innerHTML = `: ${selected.map(t => display(t)).slice(0, 2).join(',')}...+${selected.length - 2}`
         }
     }
 }
@@ -158,7 +192,11 @@ const tags: TagsModule = {
         }
         updateSummary();
     },
-    async initAsync(manifestTags: (string | TagInfo)[]) {
+    updateLanguage(lang: string) {
+        setLangAsync(lang);
+    },
+    async initAsync(manifestTags: (string | TagInfo)[], tagLoca?: TagLoca) {
+        availableTagLoca = tagLoca ?? {};
         tags.all = [...manifestTags];
         const available = tags.all.map(t => typeof t !== 'string' ? t.tag : t);
         load(available);

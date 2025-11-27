@@ -70,7 +70,7 @@ export default function gallery(options: PluginOptions): Plugin {
     // Keep in sync with: src/gallery.d.ts
     function generateManifestModule() {
         const manifest = generateManifest(true);
-        const bytes = tryWrite(buf => new Binary(buf).writeManifest(manifest, [...languages]));
+        const bytes = tryWrite(buf => new Binary(buf).writeManifest(manifest));
         const base = manifestName
             ? manifestName.substring(0, manifestName.lastIndexOf('.'))
             : undefined;
@@ -149,6 +149,7 @@ export default manifest;`;
             }
         }
         return {
+            languages: [...languages],
             tags,
             photos,
         } as Manifest;
@@ -344,7 +345,7 @@ export default manifest;`;
             this.emitFile({
                 fileName: binaryManifestName,
                 type: 'asset',
-                source: tryWrite(buf => new Binary(buf).writeManifest(manifest, [...languages])),
+                source: tryWrite(buf => new Binary(buf).writeManifest(manifest)),
             });
             languages.forEach(l => {
                 const strings = tagLoca.map(t => t[l] ?? '');

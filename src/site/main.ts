@@ -2,6 +2,7 @@ import gallery from './gallery';
 import manifest from './manifest';
 import map from './map';
 import tags from './tags';
+import loca from './loca';
 import { SelectedPhoto } from './types';
 
 /** Initialize HTML elements - fail outright if the root app-element does not exist. */
@@ -11,6 +12,7 @@ if (!app) {
 }
 /** Add the module-elements to the app root. */
 app?.replaceChildren(
+    loca.element,
     tags.element,
     map.element,
     gallery.element,
@@ -34,14 +36,18 @@ async function initAsync() {
     await manifest.initAsync();
     /** Initialize the app modules (gallery, map, tags) once the manifest data is present. */
     const promises = [
+        loca.initAsync(manifest.languages),
         gallery.initAsync(),
         map.initAsync(),
-        tags.initAsync(manifest?.tags ?? []),
+        tags.initAsync(manifest?.tags ?? [], manifest.tagLoca),
     ];
     await Promise.all(promises);
     /** Hook up events. */
     tags.events.on('onSelectionChanged', s => updateSelection(s));
     map.events.on('onRequestOpen', name => gallery.open(name));
+    loca.events.on('onLanguageChanged', l => tags.updateLanguage(l));
+    /** Initialized tag localization */
+    tags.updateLanguage(loca.selected ?? '');
     /** Initial selection. */
     updateSelection(tags.selected);
 }

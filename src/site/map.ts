@@ -48,6 +48,7 @@ export type MapModule = {
 const element = make('details', e => {
     e.appendChild(make('summary', s => {
         s.innerText = 'Map';
+        s.dataset.loca = 'map';
     }));
 });
 const map: MapModule = {

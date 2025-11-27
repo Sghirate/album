@@ -10,11 +10,12 @@ const PhotoFlags = {
 }
 
 export default class Binary extends Stream {
-    readManifest(outLanguages?: string[]): Manifest {
+    readManifest(): Manifest {
+        const languages: string[] = [];
         const nLanguages = this.readVarInt();
         for (let i = 0; i < nLanguages; ++i) {
             const lang = this.readUtf8();
-            outLanguages?.push(lang);
+            languages.push(lang);
         }
 
         const tags: string[] = [];
@@ -30,11 +31,11 @@ export default class Binary extends Stream {
             photos[name] = info;
         }
 
-        return { tags, photos };
+        return { languages, tags, photos };
     }
-    writeManifest(m: Manifest, languages: string[]): number {
-        this.writeVarInt(languages.length);
-        languages.forEach(l => this.writeUtf8(l));
+    writeManifest(m: Manifest): number {
+        this.writeVarInt(m.languages.length);
+        m.languages.forEach(l => this.writeUtf8(l));
 
         this.writeVarInt(m.tags.length);
         m.tags.forEach(t => this.writeUtf8(t));

@@ -1,5 +1,5 @@
 import Binary from "../shared/binary";
-import { Manifest } from "../shared/types";
+import { Manifest, TagLoca } from "../shared/types";
 import { Events, makeEvents } from "./events";
 import generated from 'virtual:gallery:manifest';
 
@@ -14,8 +14,11 @@ const manifest: Manifest & {
     events: Events<ManifestEvents>;
     /** Kicks off streamin in of the manifest data. */
     initAsync(): Promise<void>;
+    /** Language => URL mapping for tag loca. */
+    tagLoca: TagLoca;
 } = {
     ...(new Binary(generated.data.buffer).readManifest()),
+    tagLoca: generated.tagLoca,
     events: makeEvents(),
     async initAsync() {
         try {

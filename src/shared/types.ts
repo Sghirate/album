@@ -17,7 +17,11 @@ export type TagInfo = {
      * If a UI language is not present in this mapping, en will be used as a fallback.
      * If en is not present, the string representation (see above) will be used.
      */
-    [lang:string]: string;
+    [lang: string]: string;
+}
+/** Language => URL mapping. */
+export type TagLoca = {
+    [lang: string]: string;
 }
 /** Output image info. */
 export type ImageInfo = Dimensions & {
@@ -44,10 +48,12 @@ export type PhotoInfo = {
 }
 /** Manifest generated during builds/previews. Containing all the info the client/website needs to load and display the gallery. */
 export type Manifest = {
+    /** Available languages. */
+    languages: string[];
     /** All tags available to the client. */
     tags: string[];
     /** All photos available to the client. */
     photos: Record<string, PhotoInfo>;
 }
 /** Different output 'shapes' of a photo. Relates to property names inside PhotoInfo and the OutputOptions. */
-export type Shapes = 'image'|'thumb';
+export type Shapes = 'image' | 'thumb';
