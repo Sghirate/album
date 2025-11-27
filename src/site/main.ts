@@ -1,3 +1,4 @@
+import state from './state';
 import gallery from './gallery';
 import manifest from './manifest';
 import map from './map';
@@ -32,6 +33,7 @@ function updateSelection(tags: string[]) {
 }
 /** Initialize the app. */
 async function initAsync() {
+    state.init();
     /** Stream in the manifest. */
     await manifest.initAsync();
     /** Initialize the app modules (gallery, map, tags) once the manifest data is present. */
