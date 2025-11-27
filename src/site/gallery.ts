@@ -11,7 +11,7 @@ type GalleryEvents = {
     onError: Error | string;
 }
 /** Gallery module. Responsible for update the photoswipe element with the selected photos. */
-export type Gallery = {
+export type GalleryModule = {
     /** Event Emitter. */
     events: Events<GalleryEvents>;
     /** Root element of the gallery. Will be added to the app. */
@@ -21,7 +21,7 @@ export type Gallery = {
     /** Photo items. Photo anchrs will be created the first time they are needed and then kept
      * in the mapping - however removed from the container element, if they are not selected for display.
      */
-    items: Record<string, HTMLAnchorElement>;
+    items: Map<string, HTMLAnchorElement>;
     /** True, if the photoswipe lightbox is initialized. */
     isInitialized: boolean;
     /** Photoswipe lightbox instance. */
@@ -42,14 +42,14 @@ export type Gallery = {
     initAsync(): Promise<void>;
 }
 const element = make('div');
-const gallery: Gallery = {
+const gallery: GalleryModule = {
     events: makeEvents(),
     element,
     container: make('div', e => {
         e.id = 'gallery';
         element.appendChild(e);
     }),
-    items: {},
+    items: new Map<string, HTMLAnchorElement>(),
     isInitialized: false,
     lightbox: new PhotoSwipeLightbox({
         // may select multiple "galleries"
@@ -62,7 +62,7 @@ const gallery: Gallery = {
         pswpModule: PhotoSwipe
     }),
     open(name: string): boolean {
-        const ele = gallery.items[name];
+        const ele = gallery.items.get(name);
         if (!ele) {
             return false;
         }
@@ -76,8 +76,9 @@ const gallery: Gallery = {
     update(selection: SelectedPhoto[]): void {
         const newChildren: HTMLAnchorElement[] = [];
         for (const { name, photo } of selection) {
-            if (!(name in gallery.items)) {
-                gallery.items[name] = make('a', e => {
+            let ele = gallery.items.get(name);
+            if (!ele) {
+                ele = make('a', e => {
                     e.id = `photo-${name}`;
                     e.href = photo.image.url!;
                     e.target = '_blank';
@@ -92,8 +93,8 @@ const gallery: Gallery = {
                         e.appendChild(img);
                     });
                 });
+                gallery.items.set(name, ele);
             }
-            const ele = gallery.items[name];
             newChildren.push(ele);
         }
         gallery.container.replaceChildren(...newChildren);

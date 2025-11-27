@@ -6,7 +6,7 @@ import { Events, makeEvents } from "./events";
 type TagsEvents = {
     onSelectionChanged: string[];
 }
-export type Tags = {
+export type TagsModule = {
     /** Event emitter. */
     events: Events<TagsEvents>;
     /** Set of all available tags. Taken from the manifest. */
@@ -17,7 +17,7 @@ export type Tags = {
     container: HTMLDivElement;
     /** Mapping of tag -> photo. The tag string is the short name of the tag, not localized. Taken from the manifest.
      */
-    items: Record<string, HTMLButtonElement>;
+    items: Map<string, HTMLButtonElement>;
     /** Actively selected tags. */
     get selected(): string[];
     /** Exclusive tag selection. Deselects all other tags.
@@ -89,7 +89,7 @@ function handleChange() {
     updateSummary();
     tags.events.emit('onSelectionChanged', selected);
 }
-const tags: Tags = {
+const tags: TagsModule = {
     events: makeEvents(),
     all: [],
     element,
@@ -97,7 +97,7 @@ const tags: Tags = {
         e.id = 'tags';
         element.appendChild(e);
     }),
-    items: {},
+    items: new Map<string, HTMLButtonElement>(),
     get selected() {
         return selected;
     },
@@ -128,8 +128,9 @@ const tags: Tags = {
         for (let i = 0; i < tags.all.length; ++i) {
             const tag = tags.all[i];
             const str = typeof tag === 'string' ? tag : tag.tag;
-            if (!(str in tags.items)) {
-                tags.items[str] = make('button', e => {
+            let ele = tags.items.get(str);
+            if (!ele) {
+                ele = make('button', e => {
                     e.classList.add('tag');
                     e.id = `tag-${str}`;
                     e.name = str;
@@ -151,8 +152,8 @@ const tags: Tags = {
                     e.innerText = display(str);
                     tags.container.appendChild(e);
                 });
+                tags.items.set(str, ele);
             }
-            const ele = tags.items[str];
             ele.value = selected.includes(str) ? "selected" : "";
         }
         updateSummary();
