@@ -2,23 +2,25 @@
 <html lang="en">
 
 <head>
+  <link rel="preconnect" href="https://fonts.cdnfonts.com/" crossorigin="">
+  <style>
+    @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: normal;
+      font-display: swap;
+      font-weight: 400;
+      src: local('JetBrains Mono'), url('https://fonts.cdnfonts.com/s/98875/JetBrainsMonoRegular.woff') format('woff');
+    }
+    body {
+      font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+    }
+  </style>
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="author" content="Frederick Parotat" />
   <meta name="description" content="Personal Photo Gallery" />
-  <link rel="stylesheet" href="./src/site/reset.css">
   <link rel="stylesheet" href="./src/site/index.css">
-  <script>
-    function fontLoaded(e) {
-      e.onload = null;
-      e.rel = 'stylesheet';
-      e.removeAttribute('as');
-      document.querySelector(':root').style.setProperty('--font-family', '"JetBrains Mono", monospace')
-    }
-  </script>
-  <link rel="preconnect" href="https://fonts.cdnfonts.com/" crossorigin="">
-  <link rel="preload" href="https://fonts.cdnfonts.com/css/jetbrains-mono-2" onload="fontLoaded(this)" as="style">
   <title>The AlpBum</title>
 </head>
 
@@ -40,7 +42,8 @@
 
   <table class="footer">
     <tr>
-      <td>Style based on <a href="https://owickstrom.github.io/the-monospace-web/">The Monospace Web</a> by <a href="https://wickstrom.tech/">Oskar Wickström</a></td>
+      <td>Style based on <a href="https://owickstrom.github.io/the-monospace-web/">The Monospace Web</a> by <a
+          href="https://wickstrom.tech/">Oskar Wickström</a></td>
     </tr>
   </table>
 </body>

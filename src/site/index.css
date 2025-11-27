@@ -1,5 +1,4 @@
 :root {
-  --font-family: 'Courier New', monospace;
   --line-height: 1.20rem;
   --border-thickness: 2px;
   --text-color: #111;
@@ -13,7 +12,6 @@
 
   --border-color: color-mix(in srgb, var(--text-color) 10%, transparent);
 
-  font-family: var(--font-family);
   font-optical-sizing: auto;
   font-weight: var(--font-weight-normal);
   font-style: normal;
@@ -271,11 +269,6 @@ pre {
 
 figure pre {
   margin: 0;
-}
-
-pre,
-code {
-  font-family: var(--font-family);
 }
 
 code {
@@ -561,7 +554,6 @@ label input {
     background: none !important;
     border: none;
     padding: 0 !important;
-    font-family: var(--font-family);
     font-optical-sizing: auto;
     font-weight: var(--font-weight-normal);
     color: var(--text-color);

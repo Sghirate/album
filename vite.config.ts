@@ -54,6 +54,9 @@ export default defineConfig(({ mode }) => {
                 return undefined;
             },
             manifest: true,
+            rollupOptions: {
+                treeshake: 'smallest'
+            }
         },
     }
 })
