@@ -17,7 +17,7 @@ if (import.meta.env.PROD) {
     Icon.prototype.options.shadowUrl = markerShadowUrl;
 }
 
-/** Events emitted bt map.events */
+/** Events emitted by map.events */
 type MapEvents = {
     onRequestOpen: string;
 }
