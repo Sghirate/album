@@ -94,10 +94,10 @@ const map: MapModule = {
             lat: 47.80030,
             lng: 13.04360,
         }, 6);
-        new TileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            minZoom: 3,
-            attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        new TileLayer(MAP_PROVIDER, {
+            maxZoom: MAP_ZOOM_MAX,
+            minZoom: MAP_ZOOM_MIN,
+            attribution: MAP_ATTRIBUTION,
         }).addTo(map.map);
     },
 }

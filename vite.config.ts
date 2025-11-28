@@ -6,6 +6,16 @@ export default defineConfig(({ mode }) => {
     return {
         define: {
             BUILD_TIMESTAMP: JSON.stringify(Date.now().toString(16)),
+            MAP_PROVIDER: JSON.stringify(
+                env.MAP_PROVIDER
+                ?? 'https://tile.openstreetmap.org/{z}/{x}/{y}.png'
+            ),
+            MAP_ATTRIBUTION: JSON.stringify(
+                env.MAP_ATTRIBUTION
+                ?? '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            ),
+            MAP_ZOOM_MIN: env.MAP_ZOOM_MIN ?? 3,
+            MAP_ZOOM_MAX: env.MAP_ZOOM_MAX ?? 19,
         },
         plugins: [
             gallery({
@@ -47,7 +57,7 @@ export default defineConfig(({ mode }) => {
             }),
         ],
         build: {
-            assetsInlineLimit(filePath: string): boolean|undefined {
+            assetsInlineLimit(filePath: string): boolean | undefined {
                 if (filePath.includes('leaflet/dist')) {
                     return false;
                 }
