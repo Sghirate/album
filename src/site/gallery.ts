@@ -5,10 +5,13 @@ import { make } from './dom';
 import { Events, makeEvents } from './events';
 import { SelectedPhoto } from './types';
 
+const idPrefix = 'photo-';
+
 /** Events emitted by Gallery.events */
 type GalleryEvents = {
     onInitialized: undefined;
     onError: Error | string;
+    onPhotoChanged: string | null;
 }
 /** Gallery module. Responsible for update the photoswipe element with the selected photos. */
 export type GalleryModule = {
@@ -79,7 +82,7 @@ const gallery: GalleryModule = {
             let ele = gallery.items.get(name);
             if (!ele) {
                 ele = make('a', e => {
-                    e.id = `photo-${name}`;
+                    e.id = `${idPrefix}${name}`;
                     e.href = photo.image.url!;
                     e.target = '_blank';
                     e.setAttribute('data-pswp-width', `${photo.image.width}`);
@@ -105,6 +108,16 @@ const gallery: GalleryModule = {
         }
 
         try {
+            gallery.lightbox.on('change', () => {
+                const id = gallery.lightbox.pswp?.currSlide?.data.element?.id;
+                const name = (id !== undefined && id.startsWith(idPrefix))
+                    ? id.substring(idPrefix.length)
+                    : null;
+                gallery.events.emit('onPhotoChanged', name);
+            });
+            gallery.lightbox.on('close', () => {
+                gallery.events.emit('onPhotoChanged', null);
+            });
             gallery.lightbox.init();
             gallery.isInitialized = true;
             gallery.events.emit('onInitialized', undefined);

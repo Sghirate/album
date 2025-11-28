@@ -1,8 +1,8 @@
-import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
 import markerIconRetinaUrl from "leaflet/dist/images/marker-icon-2x.png";
+import markerIconUrl from 'leaflet/dist/images/marker-icon.png';
 import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
 
-import { Icon, Map as LeafletMap, Marker, TileLayer } from 'leaflet';
+import { FeatureGroup, Icon, Map as LeafletMap, Marker, TileLayer } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { make } from "./dom";
 import { Events, makeEvents } from "./events";
@@ -40,6 +40,8 @@ export type MapModule = {
      * Will update which markers are visible on the map - however does not performa any kind of re-framing/zooming.
      */
     update(selection: SelectedPhoto[]): void;
+    /** Focus on a photo('s map marker). */
+    focus(photo: SelectedPhoto | string): void;
     /** Initialize the map module. Sets up leaflet with a default location and the openstreetmap later.
      * The module element can already used before calling initializeAsync.
      */
@@ -65,6 +67,7 @@ const map: MapModule = {
             return;
         }
         map.markers.forEach(m => m.removeFrom(map.map!));
+        const group = new FeatureGroup();
         for (const { name, photo } of selection) {
             if (!photo.lat || !photo.long) {
                 // no geo tag!
@@ -86,6 +89,17 @@ const map: MapModule = {
                 map.markers.set(name, marker);
             }
             marker.addTo(map.map);
+            group.addLayer(marker);
+        }
+        if (group.getLayers().length > 0) {
+            map.map.flyToBounds(group.getBounds(), { maxZoom: 16, padding: [50, 50] });
+        }
+    },
+    focus(photo: SelectedPhoto | string): void {
+        const name = (typeof photo === 'string') ? photo : photo.name;
+        const marker = map.markers.get(name);
+        if (marker && map.map?.hasLayer(marker)) {
+            map.map.flyTo(marker.getLatLng(), 16);
         }
     },
     async initAsync() {

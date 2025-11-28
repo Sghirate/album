@@ -46,6 +46,7 @@ async function initAsync() {
     tags.events.on('onSelectionChanged', s => updateSelection(s));
     map.events.on('onRequestOpen', name => gallery.open(name));
     loca.events.on('onLanguageChanged', l => tags.updateLanguage(l));
+    gallery.events.on('onPhotoChanged', p => { if (p !== null) { map.focus(p) } });
     /** Initialized tag localization */
     tags.updateLanguage(loca.selected ?? '');
     /** Initial selection. */
