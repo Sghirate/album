@@ -31,6 +31,8 @@ export type MapModule = {
     container: HTMLDivElement;
     /** Leafelet map instance. */
     map: LeafletMap | undefined;
+    /** Basic tile layer. */
+    layer: TileLayer | undefined;
     /** Map markers. Mapping of photo name (as it appears in the manifest) to Marker instance.
      * Markers will be created the first time they are requested to be displayed. Afterwards they
      * are kept around, however not added to the map if they are currently not selected for display.
@@ -61,6 +63,7 @@ const map: MapModule = {
         element.appendChild(e);
     }),
     map: undefined,
+    layer: undefined,
     markers: new Map<string, Marker>(),
     update(selection: SelectedPhoto[]) {
         if (!map.map) {
@@ -108,11 +111,28 @@ const map: MapModule = {
             lat: 47.80030,
             lng: 13.04360,
         }, 6);
-        new TileLayer(MAP_PROVIDER, {
+        map.layer = new TileLayer(MAP_PROVIDER, {
             maxZoom: MAP_ZOOM_MAX,
             minZoom: MAP_ZOOM_MIN,
             attribution: MAP_ATTRIBUTION,
         }).addTo(map.map);
+
+        // Intersection Observer. Controls tile layer visibility based on whether the map is in view
+        // Used to throttle map tile requests.
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (!map.map || !map.layer) {
+                    return;
+                }
+                const isVisible = entry.intersectionRatio > 0;
+                if (isVisible && !map.map.hasLayer(map.layer)) {
+                    map.layer.addTo(map.map);
+                } else if (!isVisible && map.map.hasLayer(map.layer)) {
+                    map.layer.removeFrom(map.map);
+                }
+            });
+        });
+        observer.observe(map.container);
     },
 }
 export default map;
