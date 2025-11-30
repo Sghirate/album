@@ -21,7 +21,6 @@ export default defineConfig(({ mode }) => {
             gallery({
                 input: {
                     dir: env.GALLERY_DIR,
-                    tagLoca: env.TAG_LOCA_FILE,
                 },
                 output: {
                     image: {

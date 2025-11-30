@@ -7,22 +7,6 @@ export type Dimensions = {
     /** Image height in pixels. */
     height: number;
 }
-/** Information about a single tag. Typically generated from the XMP subject data, plus custom tags.
- */
-export type TagInfo = {
-    /** String representation of the tag. */
-    tag: string;
-    /** Language => display string mapping.
-     * Language ought be a 2-letter iso identifier (e.g. 'en' for english).
-     * If a UI language is not present in this mapping, en will be used as a fallback.
-     * If en is not present, the string representation (see above) will be used.
-     */
-    [lang: string]: string;
-}
-/** Language => URL mapping. */
-export type TagLoca = {
-    [lang: string]: string;
-}
 /** Output image info. */
 export type ImageInfo = Dimensions & {
     /** Will be undefined if the image has not been written (yet). */
@@ -48,8 +32,6 @@ export type PhotoInfo = {
 }
 /** Manifest generated during builds/previews. Containing all the info the client/website needs to load and display the gallery. */
 export type Manifest = {
-    /** Available languages. */
-    languages: string[];
     /** All tags available to the client. */
     tags: string[];
     /** All photos available to the client. */

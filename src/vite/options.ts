@@ -6,8 +6,6 @@ import { LogLevel } from "vite";
 export interface InputOptions {
     /** Root folder to be scanned for image files. */
     dir: string;
-    /** Path to tag loca file. */
-    tagLoca?: string;
 }
 //#endregion Input
 

@@ -5,7 +5,7 @@ import colors from 'picocolors';
 import ProgressBar from 'progress';
 import { PluginContext } from 'rollup';
 import { Connect, createLogger, Plugin, ResolvedConfig, ViteDevServer } from 'vite';
-import { Manifest, PhotoInfo, Shapes, TagInfo, UrlSchema } from '../shared/types';
+import { Manifest, PhotoInfo, Shapes, UrlSchema } from '../shared/types';
 import { createCache } from './cache';
 import { createFilter } from './filter';
 import { convertAsync } from './image';
@@ -28,14 +28,9 @@ export default function gallery(options: PluginOptions): Plugin {
     const idManifest = `${idPrefix}manifest`
     const idImagePrefix = `${idPrefix}image/`
     const idThumbPrefix = `${idPrefix}thumb/`
-    const tagLocaFile = options.input.tagLoca && resolve(options.input.tagLoca);
     const input = createInput(logger, options.input, options.output);
     const filter = options.filter && createFilter(options.filter);
     const cache = options.cache && createCache(logger, options.cache);
-    // const select = config.selector && createSelector(loger, config.selector);
-    // const process = config.processor && createProcessor(logger, config.processor);
-    const tagLoca: TagInfo[] = [];
-    const languages = new Set<string>();
 
     let manifestName: string | undefined = undefined;
     let pluginContext: PluginContext;
@@ -64,7 +59,7 @@ export default function gallery(options: PluginOptions): Plugin {
 
     function generateManifest(): Manifest {
         const schema = generateSchema();
-        const tags = tagLoca.map(t => t.tag);
+        const tags = [];
 
         // fallback manifest
         let maxStars = -1;
@@ -116,7 +111,6 @@ export default function gallery(options: PluginOptions): Plugin {
             }
         }
         return {
-            languages: [...languages],
             tags,
             photos,
         } as Manifest;
@@ -126,33 +120,6 @@ export default function gallery(options: PluginOptions): Plugin {
         return s.schema.replace('#NAME#', photo.name)
             .replace('#EXT#', `.${s.format.type}`)
             .replace('#HASH#', photo[shape].hash ?? '');
-    }
-    async function loadTagLocaAsync() {
-        tagLoca.length = 0;
-        if (!tagLocaFile) {
-            return;
-        }
-        try {
-            const txt = await readFile(tagLocaFile, { encoding: 'utf8' });
-            const json = JSON.parse(txt) as Record<string, Record<string, string>>;
-            for (const tag in json) {
-                const loca = json[tag];
-                let out = tagLoca.find(t => t.tag === tag);
-                if (!out) {
-                    out = { tag };
-                    tagLoca.push(out);
-                }
-                Object.assign(out, loca);
-                for (const lang in loca) {
-                    languages.add(lang);
-                }
-            }
-        } catch (e) {
-            logger.error(`Could not read tags`, {
-                timestamp: true,
-                error: (e instanceof Error) ? e : undefined,
-            });
-        }
     }
     async function emitPhotoAsync(photo: Photo, shape: Shapes): Promise<void> {
         const buf = await convertAsync(photo, photo[shape], options.output[shape]);
@@ -267,7 +234,6 @@ export default function gallery(options: PluginOptions): Plugin {
         async buildStart() {
             pluginContext = this;
             let success = true;
-            await loadTagLocaAsync();
             if (!(await input.initAsync(filter, viteServer))) {
                 success = false;
                 logger.error('Could not initialize gallery registry', { timestamp: true });

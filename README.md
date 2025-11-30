@@ -9,19 +9,6 @@ Important: this is not intended as customizable a general purpose solution. Bug 
 Without changing the vite.config.ts the generation will depend on 2 env vars:
 ```
 GALLERY_DIR=/some/directory/containing/tagged/photos/
-TAG_LOCA_FILE=/some/json/file/containing/tag_localizations.json
-```
-with the tag loca file expected to be in the following format:
-```
-{
-    "tag-name-as-it-appears-in-subjects": {
-        "en": "English Version of the Tag",
-        "de": "German Version of the Tag",
-        ...
-    },
-    ...
-}
-```
 
 ## How it works
 * [Vite](https://vite.dev/) server:
