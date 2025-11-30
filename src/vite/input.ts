@@ -69,7 +69,7 @@ export function createInput(logger: Logger, options: InputOptions, output: Outpu
                 return false;
             }
             if (meta.DateTimeOriginal) {
-                photo.name = moment(meta.DateTimeOriginal).format('YYYYMMDD_HHmmss_ZZ')
+                photo.name = moment.utc(meta.DateTimeOriginal).format('YYYYMMDD_HHmmss')
             }
             await determineSizeAsync(photo);
             photos.set(path, { photo, isStale: false });

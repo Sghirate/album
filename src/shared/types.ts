@@ -55,5 +55,9 @@ export type Manifest = {
     /** All photos available to the client. */
     photos: Record<string, PhotoInfo>;
 }
+export type UrlSchema = {
+    image: string;
+    thumb: string;
+}
 /** Different output 'shapes' of a photo. Relates to property names inside PhotoInfo and the OutputOptions. */
 export type Shapes = 'image' | 'thumb';

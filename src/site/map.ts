@@ -4,9 +4,9 @@ import markerShadowUrl from "leaflet/dist/images/marker-shadow.png";
 
 import { FeatureGroup, Icon, Map as LeafletMap, Marker, TileLayer } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { make } from "./dom";
-import { Events, makeEvents } from "./events";
-import { SelectedPhoto } from "./types";
+import { Module } from "./module";
+import shared from './shared';
+import state from "./state";
 
 if (import.meta.env.PROD) {
     Icon.Default.prototype.options.iconUrl = markerIconUrl;
@@ -17,122 +17,208 @@ if (import.meta.env.PROD) {
     Icon.prototype.options.shadowUrl = markerShadowUrl;
 }
 
-/** Events emitted by map.events */
-type MapEvents = {
-    onRequestOpen: string;
-}
-/** Map module. Wraps around a leaflet map. */
-export type MapModule = {
-    /** Event Emitter. */
-    events: Events<MapEvents>;
-    /** Root element for the map. Will be added to the app */
-    element: HTMLElement;
-    /** Container element for the map. The element that will be controlled by leaflet. */
-    container: HTMLDivElement;
-    /** Leafelet map instance. */
-    map: LeafletMap | undefined;
-    /** Basic tile layer. */
-    layer: TileLayer | undefined;
-    /** Map markers. Mapping of photo name (as it appears in the manifest) to Marker instance.
-     * Markers will be created the first time they are requested to be displayed. Afterwards they
-     * are kept around, however not added to the map if they are currently not selected for display.
-     */
-    markers: Map<string, Marker>;
-    /** Update the map based on a set of selected photos.
-     * Will update which markers are visible on the map - however does not performa any kind of re-framing/zooming.
-     */
-    update(selection: SelectedPhoto[]): void;
-    /** Focus on a photo('s map marker). */
-    focus(photo: SelectedPhoto | string): void;
-    /** Initialize the map module. Sets up leaflet with a default location and the openstreetmap later.
-     * The module element can already used before calling initializeAsync.
-     */
-    initAsync(): Promise<void>;
-}
-const element = make('details', e => {
-    e.appendChild(make('summary', s => {
-        s.innerText = 'Map';
-        s.dataset.loca = 'map';
-    }));
+const local = state.register({
+    open: {
+        key: 'm',
+        type: 'bool',
+        location: 'browser',
+    }
 });
-const map: MapModule = {
-    events: makeEvents(),
-    element,
-    container: make('div', e => {
-        e.id = 'map';
-        element.appendChild(e);
-    }),
-    map: undefined,
-    layer: undefined,
-    markers: new Map<string, Marker>(),
-    update(selection: SelectedPhoto[]) {
-        if (!map.map) {
+
+class MapModule implements Module {
+    private id: string | undefined;
+    private map: LeafletMap | undefined;
+    private layer: TileLayer | undefined;
+    private observer: IntersectionObserver | undefined;
+    private gallery: HTMLElement | null = null;
+    private markers = new Map<string, Marker>();
+    private expander: HTMLDetailsElement | null = null;
+    private container: HTMLElement | null = null;
+
+    private onOpenChanged = () => {
+        if (this.expander) {
+            this.expander.open = local.open.value;
+        }
+    }
+    private onFilterChanged = () => {
+        this.update();
+    }
+    private onPhotoChanged = () => {
+        const name = shared.open.value;
+        if (name !== null) {
+            this.focus(name);
+        }
+    }
+    private onExpanderToggled = () => {
+        if (this.expander) {
+            local.open.value = this.expander.open;
+        }
+    }
+
+    init(id?: string): void {
+        this.id = id;
+        if (!id && !this.expander) {
+            this.expander = document.querySelector(`details#${id}-expander`);
+        }
+        if (this.expander) {
+            this.expander.open = local.open.value;
+            this.expander?.addEventListener('toggle', this.onExpanderToggled);
+        }
+        if (id && !this.container) {
+            this.container = document.getElementById(`${id}-container`);
+        }
+        if (this.container && !this.map) {
+            this.map = new LeafletMap(this.container);
+            this.map.setView({
+                lat: 47.80030,
+                lng: 13.04360,
+            }, 6);
+        }
+        if (this.map) {
+            this.map.eachLayer(l => {
+                if ((l instanceof Marker) && l.options.title) {
+                    this.markers.set(l.options.title, l);
+                }
+            })
+        }
+        if (this.map && !this.layer) {
+            this.layer = new TileLayer(MAP_PROVIDER, {
+                maxZoom: MAP_ZOOM_MAX,
+                minZoom: MAP_ZOOM_MIN,
+                attribution: MAP_ATTRIBUTION,
+            }).addTo(this.map);
+        }
+
+        if (this.container && !this.observer) {
+            this.observer = new IntersectionObserver(entries => {
+                entries.forEach(entry => {
+                    if (!this.map || !this.layer) {
+                        return;
+                    }
+                    const isVisible = entry.intersectionRatio > 0;
+                    if (isVisible && !this.map.hasLayer(this.layer)) {
+                        this.layer.addTo(this.map);
+                    } else if (!isVisible && this.map.hasLayer(this.layer)) {
+                        this.layer.removeFrom(this.map);
+                    }
+                });
+            });
+        }
+        this.observer?.observe(this.container!);
+
+        if (!this.gallery) {
+            this.gallery = document.querySelector(`#gallery-container`);
+        }
+
+        this.update();
+
+        local.open.on(this.onOpenChanged);
+        shared.open.on(this.onPhotoChanged);
+        shared.filter.on(this.onFilterChanged);
+    }
+    hmr(old: this): void {
+        const any = old.id
+            || old.expander
+            || old.container
+            || old.gallery
+            || old.map
+            || old.layer
+            || old.observer
+        if (any) {
+            this.expander = old.expander;
+            this.container = old.container;
+            this.gallery = old.gallery;
+            this.map = old.map;
+            this.layer = old.layer;
+            this.observer = old.observer;
+        }
+        old[Symbol.dispose]();
+        if (any) {
+            this.init(old.id);
+        }
+    }
+    [Symbol.dispose](): void {
+        shared.filter.off(this.onFilterChanged);
+        shared.open.off(this.onPhotoChanged);
+        local.open.off(this.onOpenChanged);
+        this.observer?.unobserve(this.container!);
+    }
+
+    private update(): void {
+        if (!this.map) {
             return;
         }
-        map.markers.forEach(m => m.removeFrom(map.map!));
+
+        for (const marker of this.markers.values()) {
+            marker.removeFrom(this.map);
+        }
+
+        if (!this.gallery) {
+            return;
+        }
+
         const group = new FeatureGroup();
-        for (const { name, photo } of selection) {
-            if (!photo.lat || !photo.long) {
-                // no geo tag!
+        const selected = shared.filter.value;
+        for (const anchor of this.gallery.querySelectorAll('a')) {
+            const name = anchor.id.startsWith('photo-') ? anchor.id.substring('photo-'.length) : null;
+            if (!name) {
                 continue;
             }
-            let marker = map.markers.get(name);
+            const thumb = anchor.querySelector('img');
+            if (!thumb) {
+                continue;
+            }
+            const hasGeoTag = anchor.dataset.lng && anchor.dataset.lat;
+            if (!hasGeoTag) {
+                continue;
+            }
+            const tags = anchor.dataset['tags']?.split(',');
+            const isSelected = !selected
+                || selected.length == 0
+                || selected.every(t => tags?.includes(t));
+            if (!isSelected) {
+                continue;
+            }
+            let marker = this.markers.get(name);
             if (!marker) {
+                const lng = parseFloat(anchor.dataset.lng!);
+                const lat = parseFloat(anchor.dataset.lat!);
                 marker = new Marker({
-                    lat: photo.lat!,
-                    lng: photo.long!,
+                    lat,
+                    lng,
                 }, {
                     title: name,
                 });
-                const img = make('img', img => {
-                    img.src = photo.thumb.url!;
-                    img.onclick = () => map.events.emit('onRequestOpen', name);
-                });
+                const img = document.createElement('img');
+                img.src = thumb.src;
+                img.onclick = () => shared.open.value = name;
                 marker.bindPopup(img);
-                map.markers.set(name, marker);
+                this.markers.set(name, marker);
             }
-            marker.addTo(map.map);
+            marker.addTo(this.map);
             group.addLayer(marker);
         }
         if (group.getLayers().length > 0) {
-            map.map.flyToBounds(group.getBounds(), { maxZoom: 16, padding: [50, 50] });
+            this.map.flyToBounds(group.getBounds(), { maxZoom: 16, padding: [50, 50] });
         }
-    },
-    focus(photo: SelectedPhoto | string): void {
-        const name = (typeof photo === 'string') ? photo : photo.name;
+    }
+    private focus(name: string): void {
         const marker = map.markers.get(name);
         if (marker && map.map?.hasLayer(marker)) {
             map.map.flyTo(marker.getLatLng(), 16);
         }
-    },
-    async initAsync() {
-        map.map = new LeafletMap(map.container);
-        map.map.setView({
-            lat: 47.80030,
-            lng: 13.04360,
-        }, 6);
-        map.layer = new TileLayer(MAP_PROVIDER, {
-            maxZoom: MAP_ZOOM_MAX,
-            minZoom: MAP_ZOOM_MIN,
-            attribution: MAP_ATTRIBUTION,
-        }).addTo(map.map);
-
-        // Intersection Observer. Controls tile layer visibility based on whether the map is in view
-        // Used to throttle map tile requests.
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (!map.map || !map.layer) {
-                    return;
-                }
-                const isVisible = entry.intersectionRatio > 0;
-                if (isVisible && !map.map.hasLayer(map.layer)) {
-                    map.layer.addTo(map.map);
-                } else if (!isVisible && map.map.hasLayer(map.layer)) {
-                    map.layer.removeFrom(map.map);
-                }
-            });
-        });
-        observer.observe(map.container);
-    },
+    }
 }
+
+let map = new MapModule();
 export default map;
+
+if (import.meta.hot) {
+    import.meta.hot.accept((newMod) => {
+        if (newMod) {
+            const newMap = newMod.default;
+            newMap.hmr(map);
+            map = newMap;
+        }
+    });
+}

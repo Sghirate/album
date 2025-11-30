@@ -4,5 +4,9 @@
     "nojs": "This gallery will not function when JavaScript is disabled.",
     "footer": "Style based on <a href=\"https://owickstrom.github.io/the-monospace-web/\">The Monospace Web</a> by <a href=\"https://wickstrom.tech/\">Oskar Wickström</a>",
     "tags": "Tags",
-    "map": "Map"
+    "map": "Map",
+    "tag-top-rated": "Best",
+    "tag-bled": "Lake Bled",
+    "tag-skofja_loka": "Škofja Loka",
+    "tag-ny": "New York"
 }
