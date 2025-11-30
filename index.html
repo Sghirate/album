@@ -28,12 +28,28 @@
   <table class="header">
     <tr>
       <td colspan="2" rowspan="2" class="width-auto">
-        <h1 class="title" data-loca="title">The AlpBum</h1>
+        <h1 class="title" data-loca="title"><span>The AlpBum</span></h1>
         <span class="subtitle" data-loca="subtitle">- work in progress -</span>
       </td>
     </tr>
   </table>
   <div id="app">
+    <div id="loca"></div>
+    <details id="tags-expander">
+      <summary>
+        <span data-loca="tags">Tags</span>
+        <span id="tags-summary"></span>
+      </summary>
+      <div id="tags-container">
+      </div>
+    </details>
+    <details id="map-expander">
+      <summary>
+        <span data-loca="map">Map</span>
+      </summary>
+      <div id="map-container" />
+    </details>
+    <div id="gallery-container"></div>
     <noscript>
       <h1 data-loca="nojs">This gallery will not function when JavaScript is disabled.</h1>
     </noscript>
@@ -42,8 +58,8 @@
 
   <table class="footer">
     <tr>
-      <td data-loca="footer">Style based on <a href="https://owickstrom.github.io/the-monospace-web/">The Monospace Web</a> by <a
-          href="https://wickstrom.tech/">Oskar Wickström</a></td>
+      <td data-loca="footer">Style based on <a href="https://owickstrom.github.io/the-monospace-web/">The Monospace
+          Web</a> by <a href="https://wickstrom.tech/">Oskar Wickström</a></td>
     </tr>
   </table>
 </body>

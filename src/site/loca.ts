@@ -1,6 +1,5 @@
-import { make } from "./dom";
-import { Events, makeEvents } from "./events";
-import classes from './loca.module.css';
+import { Module } from "./module";
+import shared from './shared';
 const locaJson = import.meta.glob('./loca/*.json', {
     import: 'default',
     eager: true,
@@ -14,135 +13,159 @@ const langToJson = Object.entries(locaJson).reduce((r, e) => {
 }, {} as Record<string, any>);
 const available: string[] = Object.keys(langToJson);
 
-let selected: string | null = null;
-let translations: any | null = null;
-function setLang(lang: string): boolean {
-    if (lang === selected) {
-        return true;
-    }
-    if (!available.includes(lang)) {
-        return false;
-    }
-    selected = lang;
-    updateButtons();
-    translations = langToJson[lang] ?? null;
-    translateAll();
-    return true;
-}
-function translateAll(): boolean {
-    let any = false;
-    document.querySelectorAll<HTMLElement>('[data-loca]').forEach(e => {
-        if (translate(e)) {
-            any = true;
-        }
-    });
-    return any;
-}
-function translate(e: HTMLElement): boolean {
-    const key = e.dataset.loca;
-    const loca = ((key !== undefined) && (translations !== null) && (key in translations))
-        ? translations[key]
-        : null;
-    if (loca) {
-        if (!e.dataset.unlocalized) {
-            e.dataset.unlocalized = e.innerHTML;
-        }
-        e.innerHTML = loca;
-        return true;
-    } else if (e.dataset.unlocalized) {
-        e.innerHTML = e.dataset.unlocalized;
-    }
-    return false;
-}
-function updateButtons() {
-    loca?.buttons?.forEach((btn, lang) => {
-        btn.value = lang === selected ? 'on' : 'off';
-    });
-}
+class LocaModule implements Module {
+    private id: string | undefined;
+    private observer: MutationObserver | undefined;
+    private selected: string | null = null;
+    private translations: Record<string, string> | null = null;
+    private buttons = new Map<string, HTMLButtonElement>();
+    private element: HTMLDivElement | null = null;
 
-let observer: MutationObserver|null = null;
+    private onLanguageChanged = () => {
+        this.setLanguage(shared.language.value
+            ?? (available.length > 0 ? available[0] : '')
+        );
+    }
+    private onManifestChanged = () => {
+        this.updateButtons();
+    }
+    private onButtonClicked = (e: PointerEvent) => {
+        if (!(e.target instanceof HTMLButtonElement) || !e.target.name) {
+            return;
+        }
+        shared.language.value = e.target.name;
+    }
 
-/** Events emitted by loca.events. */
-type LocaEvents = {
-    onLanguageChanged: string;
-}
-type LocaModule = {
-    /** Event Emitter. */
-    events: Events<LocaEvents>;
-    /** Root element for the language switcher. Will be added to the app */
-    element: HTMLElement;
-    /** Language buttons. Mapping of language short name (2 letter iso code) to button. */
-    buttons: Map<string, HTMLButtonElement>;
-    /** Currently selected language. */
-    get selected(): string | null;
-    /** Initialize localization. Will append the given set of languages and try to select the 'initial language'.
-     * The initial language is determined by a previous selection or the browser default.
-     * If no initial language could be determined or it is not supported it will fall back to english.
-     * If english is not available it will fall back to the first language from the loca folder.
-     */
-    initAsync(languages: string[]): Promise<void>;
-    /** Change language. Will also store the new selected language in the localStorage for the next visit. */
-    switchLanguage(lang: string): boolean;
-};
-const element = make('div', e => {
-    e.id = 'loca';
-    e.className = classes.loca;
-});
-const loca: LocaModule = {
-    events: makeEvents<LocaEvents>(),
-    element,
-    buttons: new Map<string, HTMLButtonElement>(),
-    get selected(): string | null {
-        return selected;
-    },
-    async initAsync(languages: string[]) {
-        languages.forEach(l => {
-            if (!available.includes(l)) {
-                available.push(l);
+    init(id?: string): void {
+        this.id = id;
+        if (id && !this.element) {
+            this.element = document.querySelector('div#loca');
+        }
+        if (this.element) {
+            for (const btn of (this.element.querySelectorAll('button') ?? [])) {
+                if (!btn.name) {
+                    continue;
+                }
+                btn.addEventListener('click', this.onButtonClicked);
+                this.buttons.set(btn.name, btn);
             }
-        });
-        available.forEach(l => {
-            const btn = make('button', e => {
-                e.className = classes.lang;
-                e.onclick = () => loca?.switchLanguage(l);
-                e.value = 'off';
-                e.innerText = l;
-            });
-            loca.buttons.set(l, btn);
-            loca.element.appendChild(btn);
-        });
+        }
 
-        const initialLanguage = localStorage.getItem('lang')
-            || (navigator as any)?.language
-            || (navigator as any)?.userLanguage
-            || 'en-US';
-        setLang(initialLanguage.split('-')[0])
-            || setLang('en')
-            || setLang(available[0]);
+        this.setLanguage(shared.language.value
+            ?? (available.length > 0 ? available[0] : '')
+        );
 
-        // Register observer to automatically localize newly added html elements:
-        // TODO: consider optimizing this a bit.
-        observer = new MutationObserver((mutations: MutationRecord[]) => {
+        this.observer = new MutationObserver((mutations: MutationRecord[]) => {
             mutations.forEach(m => {
                 m.addedNodes.forEach(n => {
                     if (n instanceof HTMLElement) {
-                        translate(n);
+                        this.translate(n);
                     }
                 })
             })
         });
-        observer.observe(document, {
+        this.observer.observe(document, {
             childList: true,
             subtree: true,
         });
-    },
-    switchLanguage(lang: string): boolean {
-        const success = setLang(lang);
-        if (success) {
-            loca.events.emit('onLanguageChanged', lang);
-            localStorage.setItem('lang', lang);
+
+        shared.language.on(this.onLanguageChanged);
+        shared.manifest.on(this.onManifestChanged);
+    }
+    hmr(old: this): void {
+        const any = old.id || old.element;
+        if (any) {
+            this.element = old.element;
         }
-        return success;
-    },
-};
+        old[Symbol.dispose]();
+        if (any) {
+            this.init(old.id);
+        }
+    }
+    [Symbol.dispose](): void {
+        shared.language.off(this.onLanguageChanged);
+        shared.manifest.off(this.onManifestChanged);
+        for (const btn of this.buttons.values()) {
+            btn.removeEventListener('click', this.onButtonClicked);
+        }
+        this.buttons.clear();
+        this.observer?.disconnect();
+    }
+
+    private updateButtons() {
+        if (!this.element) {
+            return;
+        }
+        for (const lang of available) {
+            let btn = this.buttons.get(lang);
+            if (!btn) {
+                btn = document.createElement('button');
+                btn.name = lang;
+                btn.addEventListener('click', this.onButtonClicked);
+                btn.value = 'off';
+                btn.innerText = lang;
+                this.buttons.set(lang, btn);
+                this.element.appendChild(btn);
+            }
+        }
+        for (const [lang, btn] of this.buttons) {
+            const isAvailable = available.includes(lang)
+            btn.hidden = !isAvailable;
+            btn.value = isAvailable && lang === this.selected ? 'on' : 'off';
+        }
+    }
+    private translateAll(): boolean {
+        let any = false;
+        document.querySelectorAll<HTMLElement>('[data-loca]').forEach(e => {
+            if (this.translate(e)) {
+                any = true;
+            }
+        });
+        return any;
+    }
+    private translate(element: HTMLElement): boolean {
+        const key = element.dataset.loca;
+        const hasTranslation = (key !== undefined)
+            && (this.translations !== null)
+            && (key in this.translations);
+        const loca = hasTranslation
+            ? this.translations![key]
+            : null;
+        if (loca) {
+            if (!element.dataset.unlocalized) {
+                element.dataset.unlocalized = element.innerHTML;
+            }
+            element.innerHTML = loca;
+            return true;
+        } else if (element.dataset.unlocalized) {
+            element.innerHTML = element.dataset.unlocalized;
+        }
+        return false;
+    }
+    private setLanguage(language: string) {
+        if (language === this.selected) {
+            return false;
+        }
+        const isAvailable = available.includes(language);
+        if (!isAvailable) {
+            return false;
+        }
+        this.selected = language;
+        this.updateButtons();
+        this.translations = langToJson[language] ?? null;
+        this.translateAll();
+    }
+}
+
+let loca = new LocaModule();
 export default loca;
+
+if (import.meta.hot) {
+    import.meta.hot.accept((newMod) => {
+        if (newMod) {
+            const newLoca = newMod.default;
+            newLoca.hmr(loca);
+            loca = newLoca;
+        }
+    });
+}

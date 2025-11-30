@@ -1,207 +1,199 @@
-import Binary from "../shared/binary";
-import { TagInfo, TagLoca } from "../shared/types";
-import { make } from "./dom";
-import { Events, makeEvents } from "./events";
+import { Module } from "./module";
+import shared from './shared';
+import state from "./state";
 
-//#region Loca
-let availableTagLoca: TagLoca = {};
-let selectedTagLang: string | null = null;
-let tagTranslations: string[] | null = [];
-function translateAllTags() {
-    tags?.items?.forEach((btn, tag) => btn.innerText = display(tag));
-}
-async function setLangAsync(lang: string) {
-    selectedTagLang = lang;
-    let translations: string[] | null = null;
-    if (lang in availableTagLoca) {
-        const res = await fetch(availableTagLoca[lang]);
-        const buf = await res.arrayBuffer();
-        translations = new Binary(buf).readTagLoca();
-    }
-    if (selectedTagLang !== lang) {
-        return;
-    }
-    tagTranslations = translations;
-    translateAllTags();
-    updateSummary();
-}
-//#endregion Loca
-
-/** Events emitted by tags.events */
-type TagsEvents = {
-    onSelectionChanged: string[];
-}
-export type TagsModule = {
-    /** Event emitter. */
-    events: Events<TagsEvents>;
-    /** Set of all available tags. Taken from the manifest. */
-    all: (string | TagInfo)[];
-    /** Root element for the tag selection. */
-    element: HTMLElement;
-    /** Container element housing the tag buttons. */
-    container: HTMLDivElement;
-    /** Mapping of tag -> photo. The tag string is the short name of the tag, not localized. Taken from the manifest.
-     */
-    items: Map<string, HTMLButtonElement>;
-    /** Actively selected tags. */
-    get selected(): string[];
-    /** Exclusive tag selection. Deselects all other tags.
-     * @param tag short name of the tag. Taken from the manifest.
-     */
-    selectOnly(tag: string): boolean;
-    /** Select a given tag. 
-     * @param tag short name of the tag. Taken from the manifest.
-    */
-    select(tag: string): boolean;
-    /** Deselect a given tag. 
-     * @param tag short name of the tag. Taken from the manifest.
-    */
-    deselect(tag: string): boolean;
-    /** Update the dom elements of the tag selection. */
-    update(): void;
-    /** Called when the UI language changes. Should update the tags with the localized version. */
-    updateLanguage(lang: string): void;
-    /** Initialize the tag selectn. Seeds the list of available tags and loads the
-     * previously selected tag from the browsers localStorage.
-     * @param tags Available tags from the manifest.
-     */
-    initAsync(tags: (string | TagInfo)[], tagLoca?: TagLoca): Promise<void>;
-}
-/** Backing storage. */
-const selected: string[] = ['top-rated'];
-/** Read selected tasg from localSotrage. Will only load tags that were found in the manifest, other tags are ignored. */
-function load(available: string[]): boolean {
-    const str = localStorage.getItem('tags');
-    const json = str && JSON.parse(str);
-    if (!Array.isArray(json)) {
-        return false;
-    }
-    selected.length = 0;
-    selected.push(...json.filter(t => available.includes(t)));
-    return true;
-}
-/** Save selected tag array to localStorage. */
-function save() {
-    localStorage.setItem('tags', JSON.stringify(selected));
-}
-const element = make('details', e => {
-    e.appendChild(make('summary', e => {
-        e.appendChild(make('span', e => {
-            e.id = 'tags-title';
-            e.innerText = 'Tags';
-            e.dataset.loca = 'tags';
-        }));
-        e.appendChild(make('span', e => {
-            e.id = 'tags-summary';
-            e.innerText = '';
-        }));
-    }));
-    // TODO
+const local = state.register({
+    open: { key: 't', type: 'bool', location: 'browser' }
 });
-/** Get the display string for a tag. */
-function display(tag: string): string {
-    const idx = tags?.all?.indexOf(tag) ?? -1;
-    const loca = idx >= 0 ? (tagTranslations?.at(idx) ?? null) : null;
-    return loca || tag;
-}
-/** Update the summary of selected tags. */
-function updateSummary() {
-    const summary = tags.element.querySelector('#tags-summary');
-    if (summary) {
-        if (selected.length === 0) {
-            summary.innerHTML = '';
-        } else if (selected.length < 3) {
-            summary.innerHTML = `: ${selected.map(t => display(t)).join(',')}`;
+
+class TagsModule implements Module {
+    private id: string | undefined;
+    private items = new Map<string, HTMLButtonElement>();
+    private expander: HTMLDetailsElement | null = null;
+    private summary: HTMLElement | null = null;
+    private container: HTMLElement | null = null;
+    private clickCount: number = 0;
+    private lastClicked: string | null = null;
+    private timeout: ReturnType<typeof setTimeout> | null = null;
+
+    private onFilterChanged = () => {
+        this.update();
+    }
+    private onOpenChanged = () => {
+        if (this.expander) {
+            this.expander.open = local.open.value;
+        }
+    }
+    private onManifestChanged = () => {
+        this.update();
+    }
+    private onExpanderToggled = () => {
+        if (this.expander) {
+            local.open.value = this.expander?.open;
+        }
+    }
+    private onTagClicked = (e: PointerEvent) => {
+        if (!(e.target instanceof HTMLButtonElement) || !e.target.name) {
+            return;
+        }
+        this.handleClick(e.target.name);
+    }
+
+    public init(id?: string) {
+        this.id = id;
+        // Init expander
+        if (id && !this.expander) {
+            this.expander = document.querySelector(`details#${id}-expander`);
+        }
+        if (this.expander) {
+            this.expander.open = local.open.value;
+            this.expander?.addEventListener('toggle', this.onExpanderToggled);
+        }
+        // Init tag list
+        if (id && !this.summary) {
+            this.summary = document.querySelector(`#${id}-summary`);
+        }
+        if (id && !this.container) {
+            this.container = document.getElementById(`${id}-container`);
+        }
+        for (const btn of (this.container?.querySelectorAll('button') ?? [])) {
+            const tag = btn.name;
+            if (!tag) {
+                continue;
+            }
+            btn.addEventListener('click', this.onTagClicked);
+            this.items.set(tag, btn);
+        }
+        this.update();
+
+        local.open.on(this.onOpenChanged);
+        shared.filter.on(this.onFilterChanged);
+        shared.manifest.on(this.onManifestChanged);
+    }
+    public hmr(old: TagsModule): void {
+        const any = old.id || old.expander || old.container || old.summary;
+        if (any) {
+            this.expander = old.expander;
+            this.summary = old.summary;
+            this.container = old.container;
+        }
+        old[Symbol.dispose]();
+        if (any) {
+            this.init(old.id);
+        }
+    }
+    [Symbol.dispose](): void {
+        shared.manifest.off(this.onManifestChanged);
+        shared.filter.off(this.onFilterChanged);
+        local.open.off(this.onOpenChanged);
+
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+
+        for (const btn of this.items.values()) {
+            btn.removeEventListener('click', this.onTagClicked);
+        }
+        this.items.clear();
+
+        if (this.expander) {
+            this.expander.removeEventListener('toggle', this.onExpanderToggled);
+        }
+
+        this.container = null;
+        this.summary = null;
+        this.expander = null;
+    }
+
+    public selectOnly(tag: string): boolean {
+        return shared.filter.set(tag);
+    }
+    public toggleSelected(tag: string): boolean {
+        return shared.filter.has(tag)
+            ? shared.filter.del(tag)
+            : shared.filter.add(tag);
+    }
+    public select(tag: string): boolean {
+        return shared.filter.add(tag);
+    }
+    public deselect(tag: string): boolean {
+        return shared.filter.del(tag);
+    }
+    private handleClick(tag: string) {
+        if (this.lastClicked && this.lastClicked !== tag) {
+            this.performClick();
+        }
+
+        this.lastClicked = tag;
+        ++this.clickCount;
+
+        if (this.timeout !== null) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+        this.timeout = setTimeout(() => this.performClick(), 200);
+    }
+    private performClick() {
+        if (this.lastClicked === null) {
+            return;
+        }
+        if (this.clickCount > 1) {
+            this.selectOnly(this.lastClicked);
         } else {
-            summary.innerHTML = `: ${selected.map(t => display(t)).slice(0, 2).join(',')}...+${selected.length - 2}`
+            this.toggleSelected(this.lastClicked);
+        }
+        this.lastClicked = null;
+        this.clickCount = 0;
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+    }
+    private update(): void {
+        if (this.container) {
+            for (const ele of this.items.values()) {
+                const tag = ele.name;
+                ele.value = (tag && shared.filter.has(tag)) ? "selected" : "";
+            }
+        }
+        this.updateSummary();
+    }
+    private updateSummary() {
+        if (this.summary) {
+            const selected = shared.filter.value;
+            const n = selected?.length ?? 0;
+            const children: HTMLElement[] = [];
+            for (let i = 0; i < n; ++i) {
+                if (i >= 2) {
+                    const span = document.createElement('span');
+                    span.innerText = `...+${n - 2}`
+                    children.push(span);
+                    break;
+                }
+                if (i > 0) {
+                    const span = document.createElement('span');
+                    span.innerText = ',';
+                    children.push(span);
+                }
+                const span = document.createElement('span');
+                span.dataset['loca'] = `tag-${selected![i]}`;
+                span.innerText = selected![i];
+                children.push(span);
+            }
+            this.summary.replaceChildren(...children);
         }
     }
 }
-/** Sync tag state. Writes the selected tags to localStorage, updates the DOM and emits the onSelectionChanged event. */
-function handleChange() {
-    save();
-    updateSummary();
-    tags.events.emit('onSelectionChanged', selected);
-}
-const tags: TagsModule = {
-    events: makeEvents(),
-    all: [],
-    element,
-    container: make('div', e => {
-        e.id = 'tags';
-        element.appendChild(e);
-    }),
-    items: new Map<string, HTMLButtonElement>(),
-    get selected() {
-        return selected;
-    },
-    selectOnly(tag: string): boolean {
-        selected.length = 0;
-        selected.push(tag);
-        handleChange();
-        return true;
-    },
-    select(tag: string): boolean {
-        if (selected.includes(tag)) {
-            return false;
-        }
-        selected.push(tag);
-        handleChange();
-        return true;
-    },
-    deselect(tag: string): boolean {
-        const idx = selected.indexOf(tag);
-        if (idx < 0) {
-            return false;
-        }
-        selected.splice(idx, 1);
-        handleChange();
-        return true;
-    },
-    update(): void {
-        for (let i = 0; i < tags.all.length; ++i) {
-            const tag = tags.all[i];
-            const str = typeof tag === 'string' ? tag : tag.tag;
-            let ele = tags.items.get(str);
-            if (!ele) {
-                ele = make('button', e => {
-                    e.classList.add('tag');
-                    e.id = `tag-${str}`;
-                    e.name = str;
-                    e.addEventListener('dblclick', (ev) => {
-                        ev.stopPropagation();
-                        if (tags.selectOnly(str)) {
-                            tags.update();
-                        }
 
-                    });
-                    e.addEventListener('click', () => {
-                        const isSelected = (e.value?.length ?? 0) > 0;
-                        if (isSelected && tags.deselect(str)) {
-                            e.value = "";
-                        } else if (!isSelected && tags.select(str)) {
-                            e.value = "selected";
-                        }
-                    });
-                    e.innerText = display(str);
-                    tags.container.appendChild(e);
-                });
-                tags.items.set(str, ele);
-            }
-            ele.value = selected.includes(str) ? "selected" : "";
-        }
-        updateSummary();
-    },
-    updateLanguage(lang: string) {
-        setLangAsync(lang);
-    },
-    async initAsync(manifestTags: (string | TagInfo)[], tagLoca?: TagLoca) {
-        availableTagLoca = tagLoca ?? {};
-        tags.all = [...manifestTags];
-        const available = tags.all.map(t => typeof t !== 'string' ? t.tag : t);
-        load(available);
-        tags.events.emit('onSelectionChanged', selected);
-        tags.update();
-    },
-}
+let tags = new TagsModule();
 export default tags;
+
+if (import.meta.hot) {
+    import.meta.hot.accept((newMod) => {
+        if (newMod) {
+            const newTags = newMod.default;
+            newTags.hmr(tags);
+            tags = newTags;
+        }
+    });
+}
