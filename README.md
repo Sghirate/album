@@ -35,7 +35,6 @@ with the tag loca file expected to be in the following format:
 
 ## What is missing
 * Image-Info overlay in the gallery, with links to external websites (for example AllTrails).
-* Hash routing in static website (to allow link sharing).
 
 ## Where is the output
 
