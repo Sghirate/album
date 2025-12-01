@@ -9,6 +9,7 @@ Important: this is not intended as customizable a general purpose solution. Bug 
 Without changing the vite.config.ts the generation will depend on 2 env vars:
 ```
 GALLERY_DIR=/some/directory/containing/tagged/photos/
+```
 
 ## How it works
 * [Vite](https://vite.dev/) server:
