@@ -241,7 +241,7 @@ class StateStrings extends StateEntry {
         const str = params.get(this.key);
         if (desired === undefined && params.has(this.key)) {
             params.delete(this.key);
-            return false;
+            return true;
         } else if (desired !== undefined && desired !== str) {
             params.set(this.key, desired);
             return true;
