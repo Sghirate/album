@@ -373,9 +373,9 @@ class StateModule implements Module {
             entry.load();
         }
     }
-    private onStateChanged = (e: PopStateEvent) => {
+    private onStateChanged = (_: PopStateEvent) => {
         const params = new URLSearchParams(document.location.search);
-        for (const [key, state] of this.registry) {
+        for (const [_, state] of this.registry) {
             if (state.location !== 'url') {
                 continue;
             }
@@ -390,7 +390,7 @@ class StateModule implements Module {
         const storage = localStorage;
         const params = new URLSearchParams(document.location.search);
         let anyState = window.history.state === null;
-        for (const [key, state] of this.registry) {
+        for (const [_, state] of this.registry) {
             const changed = state.init(
                 state.location === 'browser' ? storage : undefined,
                 state.location === 'url' ? params : undefined,
