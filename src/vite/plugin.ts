@@ -105,7 +105,9 @@ export default function gallery(options: PluginOptions): Plugin {
             tagSet.add('top-rated');
             for (const name in photos) {
                 const info = photos[name];
-                if (info.stars === maxStars) {
+                if (info.stars === maxStars 
+                    && !info.tags.includes('top-rated')
+                ) {
                     info.tags.push('top-rated');
                 }
             }
