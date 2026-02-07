@@ -140,6 +140,30 @@ class GalleryModule implements Module {
                 || selected.every(t => tags?.includes(t));
             anchor.hidden = !isSelected;
         }
+
+        const pswp = this.lightbox?.pswp;
+        if (pswp) {
+            const id = pswp.currSlide?.data.element?.id;
+            const elements: HTMLElement[] = Array.from(this.container.querySelectorAll(selector));
+            const dataSource = {
+                gallery: this.container,
+                items: elements,
+            };
+            const idx = elements.findIndex(e => e.id === id);
+            if (idx >= 0) {
+                pswp.options.dataSource = dataSource;
+                pswp.dispatch('change');
+                pswp.refreshSlideContent(idx);
+                pswp.goTo(idx);
+                pswp.mainScroll.itemHolders.forEach(v => {
+                    if (v.slide) {
+                        pswp.refreshSlideContent(v.slide.index);
+                    }
+                });
+            } else {
+                pswp.close();
+            }
+        }
     }
 }
 let gallery = new GalleryModule();
