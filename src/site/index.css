@@ -265,20 +265,20 @@ button:active {
   }
 }
 
-#gallery-container {
+.gallery-container {
   display: flex;
   flex-wrap: wrap;
   justify-content: space-evenly;
   align-items: center;
 }
 
-#tags-container {
+.tags-container {
   display: flex;
   flex-wrap: wrap;
   gap: 1em;
 }
 
-#tags-summary {
+.tags-summary {
   text-transform: uppercase;
 }
 
@@ -287,7 +287,7 @@ button:active {
   color: var(--background-color);
 }
 
-#map-container {
+.map-container {
     height: calc(round(down, 50vh - calc(var(--line-height) * 2), 1ch));
 
     *+* {

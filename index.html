@@ -11,6 +11,7 @@
       font-weight: 400;
       src: local('JetBrains Mono'), url('https://fonts.cdnfonts.com/s/98875/JetBrainsMonoRegular.woff') format('woff');
     }
+
     body {
       font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
     }
@@ -38,18 +39,18 @@
     <details id="tags-expander">
       <summary>
         <span data-loca="tags">Tags</span>
-        <span id="tags-summary"></span>
+        <span id="tags-summary" class="tags-summary"></span>
       </summary>
-      <div id="tags-container">
+      <div id="tags-container" class="tags-container">
       </div>
     </details>
     <details id="map-expander">
       <summary>
         <span data-loca="map">Map</span>
       </summary>
-      <div id="map-container" />
+      <div id="map-container" class="map-container"></div>
     </details>
-    <div id="gallery-container"></div>
+    <div id="gallery-container" class="gallery-container"></div>
     <noscript>
       <h1 data-loca="nojs">This gallery will not function when JavaScript is disabled.</h1>
     </noscript>
