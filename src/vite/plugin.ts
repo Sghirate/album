@@ -57,7 +57,7 @@ export default function gallery(options: PluginOptions): Plugin {
         };
     }
 
-    function generateManifest(): Manifest {
+    function generateManifest(includeMeta: boolean = true): Manifest {
         const schema = generateSchema();
         const tags = [];
 
@@ -73,7 +73,7 @@ export default function gallery(options: PluginOptions): Plugin {
                 stars: p.meta.Rating,
                 tags: typeof p.meta.subject === 'string' ? [p.meta.subject] : (p.meta.subject ?? []),
                 ts: p.meta.DateTimeOriginal?.getTime(),
-                meta: p.meta,
+                meta: includeMeta ? p.meta : undefined,
                 image: { ...p.image },
                 thumb: { ...p.thumb },
             }
@@ -254,7 +254,7 @@ export default function gallery(options: PluginOptions): Plugin {
             }
         },
         async generateBundle() {
-            const manifest = await generateManifest();
+            const manifest = await generateManifest(false);
             this.emitFile({
                 fileName: manifestName,
                 type: 'asset',
