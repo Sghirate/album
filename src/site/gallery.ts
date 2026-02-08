@@ -3,15 +3,27 @@ import PhotoSwipeLightbox from 'photoswipe/lightbox';
 import 'photoswipe/photoswipe.css';
 import { Module } from './module';
 import shared from './shared';
+import state from './state';
+import TagsModule from './tags';
 
 const selector = 'a:not([hidden])';
 const idPrefix = 'photo-';
+
+const local = state.register({
+    infoOpen: {
+        key: 'i',
+        type: 'bool',
+        location: 'browser',
+    }
+});
+
 
 class GalleryModule implements Module {
     private id: string | undefined;
     private items = new Map<string, HTMLAnchorElement>();
     private lightbox: PhotoSwipeLightbox | undefined;
     private container: HTMLElement | null = null;
+    private tags = new TagsModule();
 
     private onPhotoChanged = () => {
         if (!this.container || !this.lightbox) {
@@ -86,6 +98,7 @@ class GalleryModule implements Module {
                         el.setAttribute('target', '_blank');
                         el.setAttribute('rel', 'noopener');
 
+
                         pswp.on('change', () => {
                             if (pswp?.currSlide?.data.src && (el instanceof HTMLAnchorElement)) {
                                 el.href = pswp.currSlide.data.src;
@@ -93,6 +106,99 @@ class GalleryModule implements Module {
                         });
                     },
                 });
+
+                this.lightbox?.pswp?.ui?.registerElement({
+                    name: 'info-button',
+                    order: 7,
+                    isButton: true,
+                    tagName: 'button',
+
+                    html: {
+                        isCustomSVG: true,
+                        inner: '<path d="M 25 2 C 12.309295 2 2 12.309295 2 25 C 2 37.690705 12.309295 48 25 48 C 37.690705 48 48 37.690705 48 25 C 48 12.309295 37.690705 2 25 2 z M 25 4 C 36.609824 4 46 13.390176 46 25 C 46 36.609824 36.609824 46 25 46 C 13.390176 46 4 36.609824 4 25 C 4 13.390176 13.390176 4 25 4 z M 25 11 A 3 3 0 0 0 22 14 A 3 3 0 0 0 25 17 A 3 3 0 0 0 28 14 A 3 3 0 0 0 25 11 z M 21 21 L 21 23 L 22 23 L 23 23 L 23 36 L 22 36 L 21 36 L 21 38 L 22 38 L 23 38 L 27 38 L 28 38 L 29 38 L 29 36 L 28 36 L 27 36 L 27 21 L 26 21 L 22 21 L 21 21 z" id="pswp__icn-info"/>',
+                        size: 50,
+                        outlineID: 'pswp__icn-info'
+                    },
+
+                    onClick: () => {
+                        local.infoOpen.value = !local.infoOpen.value;
+                    }
+                });
+
+                this.lightbox?.pswp?.ui?.registerElement({
+                    name: 'info-overlay',
+                    order: 9,
+                    isButton: false,
+                    appendTo: 'root',
+                    html: ``,
+                    onInit: (el, pswp) => {
+                        el.classList.add('info');
+                        const setOpen = (open: boolean) => {
+                            if (open) {
+                                el.classList.add('open')
+                            } else {
+                                el.classList.remove('open');
+                            }
+                        }
+                        setOpen(local.infoOpen.value);
+                        local.infoOpen.on(() => {
+                            setOpen(local.infoOpen.value);
+                        });
+
+                        const elTitle = el.appendChild(document.createElement('div'));
+                        elTitle.classList.add('title');
+
+                        const elTagsTitle = document.createElement('span');
+                        elTagsTitle.dataset['loca'] = 'tags';
+                        elTagsTitle.innerHTML = 'Tags';
+                        elTagsTitle.classList.add('tags-title');
+                        el.appendChild(elTagsTitle);
+
+                        const elTagsContainer = el.appendChild(document.createElement('div'));
+                        elTagsContainer.id = 'gallery-tags-container';
+                        elTagsContainer.classList.add('tags-container');
+
+                        const elCopyright = el.appendChild(document.createElement('div'));
+                        elCopyright.classList.add('copyright');
+
+                        pswp.on('change', () => {
+                            this.tags[Symbol.dispose]();
+                            if (!pswp.currSlide) {
+                                elTitle.innerHTML = elTagsContainer.innerHTML = elCopyright.innerHTML = '';
+                                return;
+                            }
+
+                            const currSlideElement = pswp?.currSlide.data.element;
+
+                            const title = currSlideElement?.dataset['title'] ?? '';
+                            elTitle.innerHTML = title;
+
+                            const tags = currSlideElement?.dataset['tags']?.split(',') ?? [];
+                            elTagsContainer.innerHTML = tags.map(t => `<button name="${t}" class="tag" data-loca="tag-${t}" value>${t}</button>`).join('');
+                            this.tags.init('gallery-tags');
+
+                            const by = currSlideElement?.dataset['by'] ?? '';
+                            const rights = currSlideElement?.dataset['copyright'] ?? '';
+                            if (!by && !rights) {
+                                elCopyright.innerHTML = '';
+                            } else {
+                                let strCopyright = `Copyright: `;
+                                if (by) {
+                                    strCopyright += `${by}, `
+                                }
+                                if (rights) {
+                                    if (rights.startsWith('CC ')) {
+                                        const license = rights.substring(3);
+                                        strCopyright += `<a href="https://creativecommons.org/licenses/${license}/4.0/" target="_blank">${rights}</a>`
+                                    } else {
+                                        strCopyright += rights;
+                                    }
+                                }
+                                elCopyright.innerHTML = strCopyright;
+                            }
+                        })
+                    }
+                })
             });
             this.lightbox.on('change', this.onGalleryChange);
             this.lightbox.on('close', this.onGalleryClose);
@@ -126,6 +232,8 @@ class GalleryModule implements Module {
             this.lightbox.off('close', this.onGalleryClose);
             this.lightbox.destroy();
         }
+
+        this.tags[Symbol.dispose]();
     }
 
     private update() {

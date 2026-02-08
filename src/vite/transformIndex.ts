@@ -1,7 +1,7 @@
 import domSerializer from 'dom-serializer';
-import { Parser, DefaultHandler, DomUtils } from 'htmlparser2';
 import { Element, Text } from 'domhandler';
-import { Manifest, UrlSchema } from '../shared/types';
+import { DefaultHandler, Parser } from 'htmlparser2';
+import { Manifest } from '../shared/types';
 
 export default function transformIndex(
     html: string,
@@ -38,6 +38,18 @@ export default function transformIndex(
                         link.attribs['data-lng'] = `${photo.long}`;
                         link.attribs['data-lat'] = `${photo.lat}`;
                     }
+                    const by = photo.meta.creator ?? photo.meta.Artist ?? photo.meta.publisher;
+                    if (by) {
+                        link.attribs['data-by'] = by;
+                    }
+                    const copyright = photo.meta.Copyright ?? photo.meta.rights?.value;
+                    if (copyright) {
+                        link.attribs['data-copyright'] = copyright;
+                    }
+                    if (photo.meta.title?.value) {
+                        link.attribs['data-title'] = photo.meta.title.value;
+                    }
+
                     const img = new Element('img', {
                         id: `img-${name}`,
                         src: photo.thumb.url,

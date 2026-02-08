@@ -208,7 +208,7 @@ button::-moz-focus-inner {
   border: 0
 }
 
-span { 
+span {
   user-select: none;
 }
 
@@ -229,26 +229,27 @@ button:active {
 
 /* LOCA: */
 #loca {
-    position: absolute;
-    top: 0;
-    left: 0;
-    margin: 0;
-    display: flex;
-    gap: 0.5em;
-    button {
-        background: none !important;
-        border: none;
-        padding: 0 !important;
-        font-optical-sizing: auto;
-        font-weight: var(--font-weight-normal);
-        color: var(--text-color);
-        cursor: pointer;
-    
-        &[value='on'] {
-            text-decoration: underline;
-            text-decoration-thickness: var(--border-thickness);
-        }
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  display: flex;
+  gap: 0.5em;
+
+  button {
+    background: none !important;
+    border: none;
+    padding: 0 !important;
+    font-optical-sizing: auto;
+    font-weight: var(--font-weight-normal);
+    color: var(--text-color);
+    cursor: pointer;
+
+    &[value='on'] {
+      text-decoration: underline;
+      text-decoration-thickness: var(--border-thickness);
     }
+  }
 }
 
 /* ~LOCA */
@@ -257,6 +258,7 @@ button:active {
 #app {
   min-height: 100vh;
 }
+
 .pswp {
   margin: 0;
 
@@ -288,11 +290,72 @@ button:active {
 }
 
 .map-container {
-    height: calc(round(down, 50vh - calc(var(--line-height) * 2), 1ch));
+  height: calc(round(down, 50vh - calc(var(--line-height) * 2), 1ch));
 
-    *+* {
-        margin: 0;
-    }
+  *+* {
+    margin: 0;
+  }
+}
+
+@keyframes flyFade {
+  from {
+    opacity: 0;
+    transform: translateY(100vh) translateX(-50%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) translateX(-50%);
+  }
+}
+
+.info {
+  position: absolute;
+  bottom: calc(var(--line-height) / 2);
+  width: calc(round(down, 80%, 1ch));
+  border-collapse: collapse;
+  margin: 0 0 calc(var(--line-height) * 1);
+  padding: 0 1ch;
+  left: 50%;
+  flex-direction: column;
+  border: var(--border-thickness) solid var(--border-color);
+  background: var(--background-color);
+
+  /* open anim: */
+  display: none;
+  opacity: 0;
+  transform: translateY(100vh) translateX(-50%);
+
+  &.open {
+    display: flex;
+    animation: flyFade 200ms ease-out forwards;
+  }
+
+  &:not(.open) {
+    animation: flyFade 200ms ease-in reverse forwards;
+  }
+
+  /* ~open anim*/
+
+  /* sub elements: */
+  .tags-title {
+    display: none;
+  }
+
+  &:has(.tags-container > *) .tags-title {
+    display: block;
+  }
+
+  .title {
+    font-weight: bold;
+  }
+
+  .copyright {
+    font-size: 10px;
+    text-align: right;
+  }
+
+  /* ~sub elements*/
 }
 
 /* ~GALLERY SPECIFIC */

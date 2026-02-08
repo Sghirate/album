@@ -5,9 +5,9 @@ import { join, parse, resolve } from "path";
 import { FSWatcher, Logger, ViteDevServer } from "vite";
 import { Filter } from "./filter";
 import { getSizeAsync } from "./image";
-import { PhotoMetaData } from "./metadata";
 import { InputOptions, OutputOptions } from "./options";
 import { Photo } from "./photo";
+import { PhotoMetaData } from "../shared/metadata";
 
 /** Input registry. */
 export interface Input {

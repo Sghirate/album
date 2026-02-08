@@ -25,6 +25,10 @@ export interface PhotoMetaData {
     DerivedFrom?: string;
     creator?: string;
     publisher?: string;
+    title?: {
+        lang?: string;
+        value?: string;
+    };
     rights?: {
         lang?: string;
         value?: string;

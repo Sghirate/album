@@ -1,3 +1,5 @@
+import { PhotoMetaData } from "./metadata";
+
 /** Basic image dimensions helper. Size is assumed to be in pixels.
  * Make sure to round to full pixels.
  */
@@ -29,6 +31,8 @@ export type PhotoInfo = {
     image: ImageInfo;
     /** Information about the converted thumbnail image of the photo. */
     thumb: ImageInfo;
+    /** Complete set of parsed photo meta data. Can be empty or undefined! */
+    meta?: PhotoMetaData;
 }
 /** Manifest generated during builds/previews. Containing all the info the client/website needs to load and display the gallery. */
 export type Manifest = {

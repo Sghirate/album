@@ -1,5 +1,5 @@
+import { PhotoMetaData } from "../shared/metadata";
 import { Dimensions, ImageInfo } from "../shared/types";
-import { PhotoMetaData } from "./metadata";
 
 /** Photo instead stored in the input regiostry. */
 export type Photo = {

@@ -6,7 +6,7 @@ const local = state.register({
     open: { key: 't', type: 'bool', location: 'browser' }
 });
 
-class TagsModule implements Module {
+export default class TagsModule implements Module {
     private id: string | undefined;
     private items = new Map<string, HTMLButtonElement>();
     private expander: HTMLDetailsElement | null = null;
@@ -183,17 +183,4 @@ class TagsModule implements Module {
             this.summary.replaceChildren(...children);
         }
     }
-}
-
-let tags = new TagsModule();
-export default tags;
-
-if (import.meta.hot) {
-    import.meta.hot.accept((newMod) => {
-        if (newMod) {
-            const newTags = newMod.default;
-            newTags.hmr(tags);
-            tags = newTags;
-        }
-    });
 }

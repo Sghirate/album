@@ -73,6 +73,7 @@ export default function gallery(options: PluginOptions): Plugin {
                 stars: p.meta.Rating,
                 tags: typeof p.meta.subject === 'string' ? [p.meta.subject] : (p.meta.subject ?? []),
                 ts: p.meta.DateTimeOriginal?.getTime(),
+                meta: p.meta,
                 image: { ...p.image },
                 thumb: { ...p.thumb },
             }
