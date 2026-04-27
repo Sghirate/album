@@ -37,7 +37,7 @@ export type PhotoInfo = {
 /** Manifest generated during builds/previews. Containing all the info the client/website needs to load and display the gallery. */
 export type Manifest = {
     /** All tags available to the client. */
-    tags: string[];
+    tags: ({ tag: string; count: number; } | string)[];
     /** All photos available to the client. */
     photos: Record<string, PhotoInfo>;
 }

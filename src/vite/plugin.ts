@@ -7,7 +7,7 @@ import { PluginContext } from 'rollup';
 import { Connect, createLogger, Plugin, ResolvedConfig, ViteDevServer } from 'vite';
 import { Manifest, PhotoInfo, Shapes, UrlSchema } from '../shared/types';
 import { createCache } from './cache';
-import { createFilter } from './filter';
+import { createFilter, hasAnySubject } from './filter';
 import { convertAsync } from './image';
 import { createInput } from './input';
 import { makeContentHash } from './makeContentHash';
@@ -59,14 +59,14 @@ export default function gallery(options: PluginOptions): Plugin {
 
     function generateManifest(includeMeta: boolean = true): Manifest {
         const schema = generateSchema();
-        const tags = [];
-
-        // fallback manifest
         let maxStars = -1;
-        const tagSet = new Set<string>();
+        const tagMap = new Map<string, number>();
         const photos: Record<string, PhotoInfo> = [...input.all()].reduce((r, p) => {
             (typeof p.meta.subject === 'string' ? [p.meta.subject] : (p.meta.subject ?? []))
-                .forEach(t => tagSet.add(t));
+                .forEach(t => {
+                    const count = (tagMap.get(t) ?? 0) + 1;
+                    tagMap.set(t, count);
+                });
             const info: PhotoInfo = {
                 long: p.meta.longitude,
                 lat: p.meta.latitude,
@@ -90,29 +90,27 @@ export default function gallery(options: PluginOptions): Plugin {
                     .replace('#NAME#', p.name)
                     .replace('#HASH#', info.image.hash ?? '');
             }
-
-            for (const tag of info.tags) {
-                const idx = tags.indexOf(tag);
-                if (idx < 0) {
-                    tags.push(tag);
-                }
-            }
-
             r[p.name] = info;
 
             return r;
         }, {} as Record<string, any>);
         if (maxStars >= 0) {
-            tagSet.add('top-rated');
+            let n = 0;
             for (const name in photos) {
                 const info = photos[name];
-                if (info.stars === maxStars 
+                if (info.stars === maxStars
                     && !info.tags.includes('top-rated')
                 ) {
                     info.tags.push('top-rated');
+                    ++n;
                 }
             }
+            const count = (tagMap.get('top-rated') ?? 0) + n;
+            tagMap.set('top-rated', count);
         }
+        const tags = [...tagMap.entries().map(e => {
+            return { tag: e[0], count: e[1] };
+        })];
         return {
             tags,
             photos,

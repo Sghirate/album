@@ -12,7 +12,11 @@ export default function transformIndex(
         switch (e.attribs.id) {
             case 'tags-container': {
                 e.childNodes.length = 0;
-                for (const tag of manifest.tags) {
+                const tags = manifest.tags
+                    .map(t => typeof t === 'string' ? { tag: t, count: 0 } : t)
+                    .sort((a, b) => b.count - a.count);
+                for (const entry of tags) {
+                    const tag = entry.tag;
                     const btn = new Element('button', {
                         name: tag,
                         class: 'tag',
